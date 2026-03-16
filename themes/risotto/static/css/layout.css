@@ -16,11 +16,11 @@
 @media (min-width: 45rem) {
     .page {
         grid-template-areas:
-          "header  header"
-          "body    aside"
-          "footer  footer";
-        grid-template-columns: minmax(0, 1fr) 15rem;
-        grid-column-gap: 2rem;
+          "header"
+          "body"
+          "aside"
+          "footer";
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -44,6 +44,7 @@
     background-color: var(--off-bg);
     box-shadow: 0 0 0 1rem var(--off-bg);
     overflow-wrap: break-word;
+    padding: 0 2rem;
 }
 
 .page__aside {

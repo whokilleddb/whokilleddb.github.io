@@ -1,1 +1,9 @@
 /* Override this file to customise the theme's CSS for your site */
+
+.post:first-of-type .post__header h1 {
+    margin-top: 0;
+}
+
+.content__header h1 {
+    margin-top: 0;
+}

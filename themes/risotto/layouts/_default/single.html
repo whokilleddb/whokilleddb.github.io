@@ -10,12 +10,6 @@
 
 {{define "aside" }}
     {{ if .Params.description }}<p>{{ .Params.description }}</p>{{ end }}
-    {{ if or (.Params.author) (.Params.date) }}
-        <p>
-            {{ if .Params.author }}By {{ .Params.author }}{{ if .Date }}, {{ end }}{{ end }}
-            {{ if .Date }}{{ .Date.Format "2006-01-02" }}{{ end }}
-        </p>
-    {{ end }}
 
     {{ if and (.Params.toc) (.TableOfContents) }}
 	    <hr>
