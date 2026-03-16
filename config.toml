@@ -20,7 +20,7 @@ pagerSize = 3
 noindex = false
 
 [params.theme]
-palette = "tokyo-night-dark"
+palette = "dracula"
 
 # Sidebar: about/bio
 [params.about]
