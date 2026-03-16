@@ -1,4 +1,4 @@
-baseURL: https://example.org/
+baseURL: https://whokilleddb.github.io/
 languageCode: en-us
 title: DB's Blogs
 
@@ -28,3 +28,7 @@ params:
   
   ShowShareButtons: true
   ShowToc: true
+
+caches:
+  images:
+    dir: :cacheDir/images
