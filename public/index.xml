@@ -13,7 +13,7 @@
       <link>http://localhost:62602/hacking/a-study-in-obfuscation/</link>
       <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
       <guid>http://localhost:62602/hacking/a-study-in-obfuscation/</guid>
-      <description></description>
+      <description>&lt;h1 id=&#34;a-study-in-obfuscation&#34;&gt;A Study in Obfuscation&lt;/h1&gt;&#xA;&lt;p&gt;In this blog series, we explore how to obfuscate a Metasploit payload to avoid detection by Antivirus Engines and shall try to go invisible.&lt;/p&gt;&#xA;&lt;p&gt;We would employ known techniques and see how they affect detection rates uploading the compiled executable to &lt;a href=&#34;https://antiscan.me/&#34;&gt;AntiScan&lt;/a&gt; as it does not submit the samples to the vendors.&lt;/p&gt;&#xA;&lt;h2 id=&#34;environment-setup&#34;&gt;Environment Setup&lt;/h2&gt;&#xA;&lt;p&gt;To begin with, we would be needing some tools and setup to get started. The first thing is the unobfuscated shellcode we&amp;rsquo;ll be using:&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
