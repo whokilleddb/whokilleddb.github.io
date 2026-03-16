@@ -1,5 +1,5 @@
 baseURL = "https://whokilleddb.github.io/"
-theme = "risotto"
+theme = ["hugo-admonitions", "risotto"]
 title = "DB Yaps"
 author = "@whokilleddb"
 #copyright = "© DB & [risotto contributors](https://github.com/joeroe/risotto/graphs/contributors)."

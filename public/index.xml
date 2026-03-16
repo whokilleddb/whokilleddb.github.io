@@ -2,18 +2,18 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>DB Yaps</title>
-    <link>http://localhost:62602/</link>
+    <link>http://localhost:1313/</link>
     <description>Recent content on DB Yaps</description>
     <generator>Hugo</generator>
     <language>en</language>
     <lastBuildDate>Mon, 16 Mar 2026 16:59:32 +0530</lastBuildDate>
-    <atom:link href="http://localhost:62602/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>A Study in Obfuscation</title>
-      <link>http://localhost:62602/hacking/a-study-in-obfuscation/</link>
+      <link>http://localhost:1313/hacking/a-study-in-obfuscation/</link>
       <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
-      <guid>http://localhost:62602/hacking/a-study-in-obfuscation/</guid>
-      <description>&lt;h1 id=&#34;a-study-in-obfuscation&#34;&gt;A Study in Obfuscation&lt;/h1&gt;&#xA;&lt;p&gt;In this blog series, we explore how to obfuscate a Metasploit payload to avoid detection by Antivirus Engines and shall try to go invisible.&lt;/p&gt;&#xA;&lt;p&gt;We would employ known techniques and see how they affect detection rates uploading the compiled executable to &lt;a href=&#34;https://antiscan.me/&#34;&gt;AntiScan&lt;/a&gt; as it does not submit the samples to the vendors.&lt;/p&gt;&#xA;&lt;h2 id=&#34;environment-setup&#34;&gt;Environment Setup&lt;/h2&gt;&#xA;&lt;p&gt;To begin with, we would be needing some tools and setup to get started. The first thing is the unobfuscated shellcode we&amp;rsquo;ll be using:&lt;/p&gt;</description>
+      <guid>http://localhost:1313/hacking/a-study-in-obfuscation/</guid>
+      <description>&lt;p&gt;In this blog series, we explore how to obfuscate a Metasploit payload to avoid detection by Antivirus Engines and shall try to go invisible.&lt;/p&gt;&#xA;&lt;p&gt;We would employ known techniques and see how they affect detection rates uploading the compiled executable to &lt;a href=&#34;https://antiscan.me/&#34;&gt;AntiScan&lt;/a&gt; as it does not submit the samples to the vendors.&lt;/p&gt;&#xA;&#xA;    &lt;div class=&#34;admonition warning&#34;&gt;&#xA;      &lt;div class=&#34;admonition-header&#34;&gt;&lt;svg xmlns=&#34;http://www.w3.org/2000/svg&#34; viewBox=&#34;0 0 512 512&#34;&gt;&lt;path d=&#34;M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z&#34;/&gt;&lt;/svg&gt;&#xA;        &lt;span&gt;Antiscan.me is no longer active so some links might be broken&lt;/span&gt;&#xA;      &lt;/div&gt;&#xA;    &lt;/div&gt;&lt;h2 id=&#34;environment-setup&#34;&gt;Environment Setup&lt;/h2&gt;&#xA;&lt;p&gt;To begin with, we would be needing some tools and setup to get started. The first thing is the unobfuscated shellcode we&amp;rsquo;ll be using:&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
