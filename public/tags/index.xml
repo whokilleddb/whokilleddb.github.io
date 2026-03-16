@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Tags on DB&#39;s Blogs</title>
-    <link>http://localhost:1313/tags/</link>
-    <description>Recent content in Tags on DB&#39;s Blogs</description>
+    <title>Tags on DB Yaps</title>
+    <link>http://localhost:62602/tags/</link>
+    <description>Recent content in Tags on DB Yaps</description>
     <generator>Hugo</generator>
-    <language>en-us</language>
-    <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
+    <language>en</language>
+    <lastBuildDate>Mon, 16 Mar 2026 16:59:32 +0530</lastBuildDate>
+    <atom:link href="http://localhost:62602/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>C</title>
+      <link>http://localhost:62602/tags/c/</link>
+      <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
+      <guid>http://localhost:62602/tags/c/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Hacking</title>
+      <link>http://localhost:62602/tags/hacking/</link>
+      <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
+      <guid>http://localhost:62602/tags/hacking/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Index</title>
+      <link>http://localhost:62602/tags/index/</link>
+      <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
+      <guid>http://localhost:62602/tags/index/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Malware</title>
+      <link>http://localhost:62602/tags/malware/</link>
+      <pubDate>Mon, 16 Mar 2026 16:59:32 +0530</pubDate>
+      <guid>http://localhost:62602/tags/malware/</guid>
+      <description></description>
+    </item>
   </channel>
 </rss>

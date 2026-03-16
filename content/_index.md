@@ -1,3 +1,7 @@
+---
+toc: true
+---
+
 # DB Yaps
 
 _Hey VSauce, DB Here_
