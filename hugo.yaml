@@ -1,0 +1,30 @@
+baseURL: https://example.org/
+languageCode: en-us
+title: DB's Blogs
+
+theme: ["PaperMod"]
+
+params:
+  assets:
+      favicon: "favicon.ico"
+  # defaultTheme: light
+  # defaultTheme: dark
+  defaultTheme: auto # to switch between dark or light according to browser theme
+
+  homeInfoParams:
+    Title: Hello VSauce, DB here 👋
+    Content: A bunch of blogs about (mostly) tech, some philosophy, politics(?) and maybe some maths. Views are my own. I love games, literature, paintings and movies!
+
+  socialIcons: # optional
+    - name: "github"
+      url: "https://github.com/whokilleddb/"
+    - name: "x"
+      url: "https://x.com/whokilleddb"
+    - name: "linkedin"
+      url: "https://www.linkedin.com/in/whokilleddb/"
+
+  cover:
+    linkFullImages: true
+  
+  ShowShareButtons: true
+  ShowToc: true
