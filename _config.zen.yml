@@ -1,0 +1,30 @@
+favicon: /favicon.ico
+
+menu:
+  Home: /
+  Archives: /archives
+
+copyright:
+  name: '@whokilleddb'
+
+# Social links shown in sidebar/footer
+social:
+  GitHub: https://github.com/whokilleddb
+  X: https://x.com/whokilleddb
+  LinkedIn: https://www.linkedin.com/in/whokilleddb/
+
+# twikoo comment system (disabled — fill in envId to enable)
+twikoo:
+  enable: false
+  envId: ''
+  region: ap-shanghai
+  lang: en
+
+# beaudar comment system (disabled — set enable: true and fill repo to enable)
+beaudar:
+  enable: false
+  repo: whokilleddb/whokilleddb.github.io
+  branch: main
+
+# Footer friend links
+friends:
