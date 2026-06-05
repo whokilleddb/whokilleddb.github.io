@@ -2,7 +2,8 @@ favicon: /favicon.ico
 
 menu:
   Home: /
-  Archives: /archives
+  Hacking: /tags/hacking
+  Others: /tags/others
 
 copyright:
   name: '@whokilleddb'

@@ -2,7 +2,9 @@
 Thumbs.db
 db.json
 *.log
+*.pid
 node_modules/
 public/
 .deploy*/
+.cache/
 _multiconfig.yml

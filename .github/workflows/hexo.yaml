@@ -35,8 +35,6 @@ jobs:
         run: npm ci
       - name: Build the site
         run: npx hexo generate
-        env:
-          HEXO_BASE_URL: ${{ steps.pages.outputs.base_url }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
