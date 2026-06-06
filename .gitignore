@@ -1,2 +1,10 @@
+.DS_Store
+Thumbs.db
+db.json
+*.log
+*.pid
+node_modules/
 public/
-resources/
+.deploy*/
+.cache/
+_multiconfig.yml
