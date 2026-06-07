@@ -248,7 +248,23 @@ So - you can reuse the same class with different data types - and this will come
 
 ## Mixins
 
+First thing to know: _Mixins are classes_. It's just that they are a special category of classes which have some specific properties. So we can say that:
 
+> All Mixins are classes, but not all classes are Mixins
+
+A mixin is a class that provides a specific set of functionalities and is intended to be used in conjunction with other classes through multiple inheritance. Mixins are typically abstract or incomplete in themselves, meaning they do not represent a complete object but rather provide a modular way to add features to a class hierarchy. Think of Mixins as the _ketchup_ of classes. You dont have ketchup on it's own (hopefully), you add it on top of a HotDog to make it better. Extending this analogy, you can have the same ketchup go on a hotdog, fries or your chicken wings. While the base class of food items remain different - our Mixin aka ketchup remains the same to add to their taste(functionality) - hope that made sense. 
+
+In more technical terms, key characteristics of C++ Mixins are:
+
+1. **Non-Instantiable**: Mixins often contain pure virtual functions (abstract methods) and may not have any concrete data members. This makes them unsuitable for standalone instantiation.
+  
+2. **Functionality Addition**: The primary purpose of mixins is to add specific behaviors or functionalities to a class without affecting its primary inheritance hierarchy.
+
+3. **Multiple Inheritance Utilization**: Mixins are often used in conjunction with multiple inheritance, allowing a class to inherit from both a main base class and one or more mixins. This composition allows the class to have features from all its base classes.
+
+4. **Code Reusability**: By using mixins, developers can reuse functionality across different class hierarchies without creating complex inheritance trees.
+
+5. **Avoiding Object Identity**: Mixins do not represent a complete object model on their own. They are meant to be part of a larger class hierarchy and should not be instantiated directly.
 
 ## CRTP
 
@@ -262,3 +278,5 @@ Resuming
 1. [Official Guide on how to write a LLVM pass](https://llvm.org/docs/WritingAnLLVMNewPMPass.html)
 2. [Extending LLVM for Code Obfuscation (1 of 2)](https://www.praetorian.com/blog/extending-llvm-for-code-obfuscation-part-1/)
 3. [Templates in C++](https://www.geeksforgeeks.org/cpp/templates-cpp/)
+4. [Combining Static and Dynamic Polymorphism with C++ Mixin classes](https://michael-afanasiev.github.io/2016/08/03/Combining-Static-and-Dynamic-Polymorphism-with-C++-Template-Mixins.html)
+5. [What are Mixins (as a concept)](https://stackoverflow.com/questions/18773367/what-are-mixins-as-a-concept)
