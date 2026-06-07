@@ -266,7 +266,34 @@ In more technical terms, key characteristics of C++ Mixins are:
 
 5. **Avoiding Object Identity**: Mixins do not represent a complete object model on their own. They are meant to be part of a larger class hierarchy and should not be instantiated directly.
 
+[This is an excellent example of C++ Mixins.](https://gist.github.com/MangaD/93a79aae04324c85f2b8d691b66441ff) I would highly recommend going through atleast the first two examples. We will see more of this in the next example.
+
 ## CRTP
+
+C++ has this curious thing called Curiously Recurring Template Pattern (CRTP). It is a C++ idiom where a derived class inherits from a base class template, passing itself as the template argument. This technique enables static polymorphism, allowing the base class to call methods in the derived class at compile time without the performance overhead of virtual functions (VTables). Here is the example Gemini provided:
+
+```cpp
+// The Base class template
+template <typename Derived>
+class Base {
+public:
+    void interface() {
+        // Safe downcast to access Derived class functionality
+        static_cast<Derived*>(this)->implementation();
+    }
+};
+
+// The Derived class passing itself to the Base template
+class Derived : public Base<Derived> {
+public:
+    void implementation() {
+        // Specific logic here
+    }
+};
+```
+
+Why do we need this? Becuase standard dynamic polymorphism uses virtual functions, which require runtime pointer lookups via a VTable. CRTP resolves these calls at compile time. This makes it heavily utilized in high-frequency trading (HFT) and embedded systems where every CPU cycle matters.
+
 
 ---
 
