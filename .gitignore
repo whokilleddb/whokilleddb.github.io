@@ -8,3 +8,4 @@ public/
 .deploy*/
 .cache/
 _multiconfig.yml
+.DS_Store

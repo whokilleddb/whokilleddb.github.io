@@ -126,7 +126,6 @@ links:
     url: https://github.com/whokilleddb/
     intro: ""
     icon: false
-
   - title: "X"
     url: https://x.com/whokilleddb/
     intro: ""
