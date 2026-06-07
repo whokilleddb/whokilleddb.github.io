@@ -12,20 +12,20 @@ This series of blogs is supposed to document my learning journey from a C/gcc ne
 First thing first, we need to do some basic setup, starting with fetching the source code for the LLVM project:
 
 ```bash
-$ git clone https://github.com/llvm/llvm-project.git  
+git clone https://github.com/llvm/llvm-project.git  
 ```
 
 At the time of writing this, the latest commit is ` 8aafa50c7a2dfb8ca1d5cdf8980f7f2d259779f5` - incase you wanna follow along the exact version and stuff, just do:
 
 ```bash
-$ git checkout 8aafa50c7a2dfb8ca1d5cdf8980f7f2d259779f5
+git checkout 8aafa50c7a2dfb8ca1d5cdf8980f7f2d259779f5
 ```
 
 
 Next, we install some basics with:
 
 ```
-$ sudo apt -y ninja-build install build-essential subversion cmake python3-dev libncurses5-dev libxml2-dev libedit-dev swig doxygen graphviz xz-utils clang gdb git vim tmux
+sudo apt -y ninja-build install build-essential subversion cmake python3-dev libncurses5-dev libxml2-dev libedit-dev swig doxygen graphviz xz-utils clang gdb git vim tmux
 ```
 
 I would recommend running everything in a `tmux` session because some of these compilations take a while. That being said, let's talk about LLVM (while my code compiles in the background).
@@ -100,10 +100,155 @@ int main(){
 }
 ```
 
-Well, we can all agree that's a lot of repeated code. While the main function body remains identicat, we have to maintain different functions just due to the nature of the data types we are dealing with. C++ attempts to solve this problem with templates.
+Well, we can all agree that's a lot of repeated code. While the main function body remains identicat, we have to maintain different functions just due to the nature of the data types we are dealing with. C++ attempts to solve this problem with templates. The same code in C++ would be something like:
 
+```cpp
+#include <iostream>
+
+template <typename T> T maxVal(T x, T y) { return (x > y)? x:y;}
+
+int main(){
+	std::cout << "Max int:   between 6, 7 is: " << maxVal(6,7) << std::endl;
+	std::cout << "Max float: between 6.0, 7.0 is: " << maxVal(6.0,7.0) << std::endl;
+	std::cout << "Max int: between '6', '7' is: " << maxVal('6','7') << std::endl;
+	return 0;
+}
+```
+
+So, templates just help us write generic functions which can be used by any valid type `T`. A _slightlty inaccurate but easy-to-understand_ way to understand templates is to consider them as functions which take the data type(can be a class, composite data and more as well) as well, along with the values of the type. 
+
+
+### Template Classes
+
+Templates go beyond just functions - we can have template classes as well. Consider the following terrible C code:
+
+```c
+#include <stdio.h>
+#include <assert.h>
+
+typedef struct _int_func {
+  int val;
+  int (*fn)(struct _int_func *);
+} int_func, *p_int_func;
+
+int inc_func(p_int_func p_int){
+  p_int->val = p_int->val + 1;
+  return p_int->val;
+} 
+
+typedef struct _float_func {
+  float val;
+  float (*fn)(struct _float_func *);
+} float_func, *p_float_func;
+
+float float_inc(p_float_func p_float) {
+  p_float->val = p_float->val+1;
+  return p_float->val;
+}
+
+int main() {
+  int_func ifunc = {0};
+  ifunc.val = 6;
+  ifunc.fn = inc_func;
+  int iret = ifunc.fn(&ifunc);
+
+  printf("[+] ifunc: 0x%p | ifunc->val: %d | ifunc->fn: 0x%p | iret: %d\n", &ifunc, ifunc.val, (void *)(ifunc.fn), iret);
+
+  float_func ffunc = {0};
+  ffunc.val = 6.0006;
+  ffunc.fn = float_inc;
+  float fret = ffunc.fn(&ffunc);
+
+  printf("[+] ffunc: 0x%p | ffunc->val: %f | ffunc->fn: 0x%p | fret: %f\n", &ffunc, ffunc.val, (void *)(ffunc.fn), fret);
+
+  return 0;
+}
+```
+
+A C++/OOPs based approach would be: 
+
+```cpp
+#include <iostream>
+
+class IntFunc {
+  public:
+    IntFunc(int x)
+      : val{x} {}
+
+    int inc_func() {
+      val = val + 1;
+      return val;
+    }
+    
+    int get_num() { return val;}
+  private:
+    int val;
+};
+
+class FloatFunc {
+  public:
+    FloatFunc(float x)
+      : val{x} {}
+
+    float inc_func() {
+      val = val + 1;
+      return val;
+    }
+    
+    float get_num() { return val;}
+  private:
+    float val;
+};
+
+
+int main() {
+  IntFunc ifunc(6);
+  FloatFunc ffunc(6.0006);
+
+  std::cout << "ifunc.val: " << ifunc.get_num() << " | inc_func(): " << ifunc.inc_func() << " | new ifunc.val: " << ifunc.get_num() << std::endl;
+  std::cout << "ffunc.val: " << ffunc.get_num() << " | inc_func(): " << ffunc.inc_func() << " | new ffunc.val: " << ffunc.get_num() << std::endl;
+ 
+  return 0;
+}
+```
+
+But C++ allows us to optimize this further using templates. If you notice, `IntFunc` and `FloatFunc` share a lot of the same code - this is where templates come in.
+
+```cpp
+#include <iostream>
+
+template <class T>
+class NumFunc {
+  public: 
+    NumFunc(T x):
+      val(x){}
+
+    T inc_func() {
+      val = val+1;
+      return val;
+    }
+
+    T get_num() { return val;}
+
+  private:
+    T val;
+};
+
+int main() {
+  NumFunc<int> ifunc(6);
+  NumFunc<float> ffunc(6.006);
+
+  std::cout << "ifunc.val: " << ifunc.get_num() << " | inc_func(): " << ifunc.inc_func() << " | new ifunc.val: " << ifunc.get_num() << std::endl;
+  std::cout << "ffunc.val: " << ffunc.get_num() << " | inc_func(): " << ffunc.inc_func() << " | new ffunc.val: " << ffunc.get_num() << std::endl;
+  return 0;
+}
+```
+
+So - you can reuse the same class with different data types - and this will come in handy soon.
 
 ## Mixins
+
+
 
 ## CRTP
 
