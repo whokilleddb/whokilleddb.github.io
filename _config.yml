@@ -40,7 +40,8 @@ relative_link: false
 future: true
 syntax_highlighter: highlight.js
 highlight:
-  line_number: false
+  enable: true
+  line_number: true
   auto_detect: false
   tab_replace: ''
   wrap: false
@@ -77,7 +78,17 @@ exclude:
 ignore:
 
 # Extensions
-theme: zen
+theme: freemind.bithack
+
+category_generator:
+  per_page: 0
+
+tag_generator:
+  per_page: 0
+
+excerpt:
+  depth: 10
+  hideWholePostExcerpts: true
 
 # Deployment
 deploy:

@@ -1,82 +1,512 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE HTML>
+<html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
-    <meta name="description" content="i talk about things like">
-    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-    <title>
-        
-        DB Yaps
-    </title>
-    
-<link rel="stylesheet" href="/css/style.min.css">
+  <meta charset="utf-8">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="expires" content="0">
+  
+  <title>DB Yaps</title>
+  <meta name="author" content="@whokilleddb">
+  
+  <meta name="description" content="i talk about things like">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    
-<link rel="stylesheet" href="/css/partial/atom-one-dark.min.css">
+  
+  <meta property="og:site_name" content="DB Yaps"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  
+    <link rel="alternative" href="/atom.xml" title="DB Yaps" type="application/atom+xml">
+  
+  
+    <link href="/favicon.png" rel="icon">
+  
+  
+  <link rel="stylesheet" href="/css/bootstrap.min.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/font-awesome.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/responsive.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/highlight.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/prism.css" media="screen" type="text/css">
+  <link rel="stylesheet" href="/css/google-fonts.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+
+  <script src="/js/jquery-2.0.3.min.js"></script>
+
+  <!-- analytics -->
+  
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-70812759-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-70812759-1');
+</script>
+
+
+
+
+
 
 <meta name="generator" content="Hexo 7.3.0"></head>
-    <body>
-        
-            <header>
-    <a class="title" href="/">
-        <h1>
-            DB Yaps
-        </h1>
-        
-    </a>
-    <nav>
-        <p>
-            <a href="/">Home</a><a href="/tags/hacking">Hacking</a><a href="/tags/others">Others</a>
-        </p>
-    </nav>
-</header>
-        
-        <main>
-    <ul class="blog-posts">
-        
-            
-                <li>
-                    <span>
-                        <i>
-                            <time>
-                                2026/03/16
-                            </time>
-                        </i>
-                    </span>
-                    <a href="/2026/03/16/a-study-in-obfuscation/">A Study in Obfuscation</a>
-                </li>
-                
-                <li>
-                    <span>
-                        <i>
-                            <time>
-                                2026/03/16
-                            </time>
-                        </i>
-                    </span>
-                    <a href="/2026/03/16/vvhich-extension/">VVhich Extension?</a>
-                </li>
-                
-    </ul>
-</main>
-        
-            <footer style="padding:25px 0;">
+
+ <body>  
+  <nav id="main-nav" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+      <button type="button" class="navbar-header navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+		<span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+	  <a class="navbar-brand" href="/">DB Yaps</a>
+      <div class="collapse navbar-collapse nav-menu">
+		<ul class="nav navbar-nav">
+		  
+		  <li>
+			<a href="/archives" title="All the articles.">
+			  <i class=""></i>Archives
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/categories" title="All the categories.">
+			  <i class=""></i>Categories
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/tags" title="All the tags.">
+			  <i class=""></i>Tags
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/about" title="About me.">
+			  <i class=""></i>About
+			</a>
+		  </li>
+		  
+		  <li>
+			<a href="/atom.xml" title="Subscribe me.">
+			  <i class=""></i>RSS
+			</a>
+		  </li>
+		  
+		</ul>
+      </div>
+    </div> <!-- container -->
+</nav>
+<div class="clearfix"></div>
+
+  <div class="container">
+  	<div class="content">
+    	 <div class="page-header logo">
+  <h1>DB Yaps<span class="blink-fast">|</span></h1>
+</div>
+
+<div class="row page">
+
+	
+	<div class="col-md-9">
+	
+
+		<div class="slogan">
+
+
+		<i class="fa fa-heart blink-slow"></i>
+
+		wubba lubba dub dub.
+
+</div>    
+
+		<div id="top_search"></div>
+		<div class="mypage">
+		
+		<!-- title and entry -->
+		
+			
+	
+	<!-- display as entry -->
+<div class="row">
+	<div class="col-md-8">
+		<h3 class="title">
+			<a href="/2026/06/07/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-1/" >Learning to write a LLVM Pass for Code Obfuscation #1</a>
+		</h3>
+		</div>
+	<div class="col-md-4">
+		<div class="date">post @ 2026-06-07  </div>
+		</div>
+	</div>
+	
+
+
+			<div class="entry">
+  <div class="row">
+	
+	
+		<p>This series of blogs is supposed to document my learning journey from a C&#x2F;gcc nerd to a C++&#x2F;LLVM chad. Expect this blog to be very informal, with the occasional rant, but it will document <em>everything</em> that I have learnt, including C++ internals, gimmicks, LLVM quirks and other references.</p>
+<h1 id="Setup"><a href="#Setup" class="headerlink" title="Setup"></a>Setup</h1><p>First thing first, we need to do some basic setup, starting with fetching the source code for the LLVM project:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ git <span class="hljs-built_in">clone</span> https://github.com/llvm/llvm-project.git  <br></code></pre></td></tr></table></figure>
+
+<p>At the time of writing this, the latest commit is <code> 8aafa50c7a2dfb8ca1d5cdf8980f7f2d259779f5</code> - incase you wanna follow along the exact version and stuff, just do:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ git checkout 8aafa50c7a2dfb8ca1d5cdf8980f7f2d259779f5<br></code></pre></td></tr></table></figure>
+
+
+<p>Next, we install some basics with:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">$ sudo apt -y ninja-build install build-essential subversion cmake python3-dev libncurses5-dev libxml2-dev libedit-dev swig doxygen graphviz xz-utils clang gdb git vim tmux<br></code></pre></td></tr></table></figure>
+
+<p>I would recommend running everything in a <code>tmux</code> session because some of these compilations take a while. That being said, let’s talk about LLVM (while my code compiles in the background).</p>
+<h2 id="Why-LLVM"><a href="#Why-LLVM" class="headerlink" title="Why LLVM?"></a>Why LLVM?</h2>
+	
+	</div>
+  <a type="button" href="/2026/06/07/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-1/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+<div class="row">
+	<div class="col-md-8">
+		<h3 class="title">
+			<a href="/2026/03/16/vvhich-extension/" >VVhich Extension?</a>
+		</h3>
+		</div>
+	<div class="col-md-4">
+		<div class="date">post @ 2026-03-16  </div>
+		</div>
+	</div>
+	
+
+
+			<div class="entry">
+  <div class="row">
+	
+	
+		<p>While preparing for <a target="_blank" rel="noopener" href="https://insomnihack.ch/talks/from-code-to-compromise-turning-modern-day-ides-into-attack-vectors-via-malicious-extensions/">my talk at Insomni Hack</a> and reviewing the <a target="_blank" rel="noopener" href="https://github.com/whokilleddb/sinister-vsix">sinister-vsix</a> project, I wondered: <em>“Hey, how does VSCode fetch the metadata for these extensions?”</em>. Just a small recap, during the <a target="_blank" rel="noopener" href="https://github.com/whokilleddb/sinister-vsix/tree/main/task4">Task#4</a> - we spoofed a <a target="_blank" rel="noopener" href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server">Microsoft Published Extension</a>. </p>
+<p>However, upon examining the extension code, I noticed a couple of things: </p>
+<ul>
+<li>Metadata like stars, download count, etc wasnt stored in the source code (which made sense)</li>
+<li><em>“Where is the blue tick coming from?”</em></li>
+</ul>
+<p>So, I decided to take a deeper look. This blog documents the result of the research done quickly at an airport while I am on my way to present my fully finished 100+ slides deck(boy oh boy do I have to change those!) - but hopefully it’s not <em>tooo</em> incohorent. </p>
+<h2 id="VVhere-is-the-metadata-coming-from"><a href="#VVhere-is-the-metadata-coming-from" class="headerlink" title="VVhere is the metadata coming from?"></a>VVhere is the metadata coming from?</h2><p><img src="https://woforgmedia.wordonfire.org/wp-content/uploads/2024/10/30144433/the-witch.jpg"></p>
+<p>First, we go searching for the source of the metadata. A bit of poking around later, I found that VSCode made a POST request to the marketplace API as such:</p>
+<pre><code class="hljs bash">curl -X POST <span class="hljs-string">&quot;https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery&quot;</span> -H <span class="hljs-string">&quot;Content-Type: application/json&quot;</span> -H <span class="hljs-string">&quot;Accept: application/json;api-version=7.2-preview&quot;</span> -H <span class="hljs-string">&quot;User-Agent: VSCode&quot;</span> -d <span class="hljs-string">&#x27;&#123;</span>
+<span class="hljs-string">    &quot;filters&quot;: [&#123;</span>
+<span class="hljs-string">      &quot;criteria&quot;: [</span>
+<span class="hljs-string">        &#123; &quot;filterType&quot;: 7, &quot;value&quot;: &quot;ms-vscode.live-server&quot; &#125;</span>
+<span class="hljs-string">      ],</span>
+<span class="hljs-string">      &quot;pageSize&quot;: 1,</span>
+<span class="hljs-string">      &quot;pageNumber&quot;: 1,</span>
+<span class="hljs-string">      &quot;sortBy&quot;: 0,</span>
+<span class="hljs-string">      &quot;sortOrder&quot;: 0</span>
+<span class="hljs-string">    &#125;],</span>
+<span class="hljs-string">    &quot;assetTypes&quot;: [],</span>
+<span class="hljs-string">    &quot;flags&quot;: 950</span>
+<span class="hljs-string">  &#125;&#x27;</span></code></pre>
+
+<p>The only thing to note here is the <code>value</code> parameter which is set to <code>ms-vscode.live-server</code> (this is always set to <code>extension_publisher:extension_name</code>). On issuing this request, we get a big response, which (after prettifying) looks like this:</p>
+<pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span>
+  <span class="hljs-attr">&quot;results&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">&#123;</span>
+      <span class="hljs-attr">&quot;extensions&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">&#123;</span>
+          <span class="hljs-attr">&quot;publisher&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">&#123;</span>
+            <span class="hljs-attr">&quot;publisherId&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;5f5636e7-69ed-4afe-b5d6-8d231fb3d3ee&quot;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">&quot;publisherName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ms-vscode&quot;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">&quot;displayName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Microsoft&quot;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">&quot;flags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;verified&quot;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">&quot;domain&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;https://microsoft.com&quot;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-attr">&quot;isDomainVerified&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span>
+          <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;extensionId&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;4eae7368-ec63-429d-8449-57a7df5e2117&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;extensionName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;live-server&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;displayName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Live Preview&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;flags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;validated, public, preview&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;lastUpdated&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2026-02-09T09:27:53.193Z&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;publishedDate&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2021-06-21T20:33:59.11Z&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;releaseDate&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2021-06-21T20:33:59.11Z&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;shortDescription&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Hosts a local server in your workspace for you to preview your webpages on.&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;versions&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;version&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;0.5.2026020901&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;flags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;validated&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;lastUpdated&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;2026-02-09T09:27:53.193Z&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;files&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                <span class="hljs-punctuation">&#123;</span>
+                    &lt;a_bunch_of_stuff&gt;
+                <span class="hljs-punctuation">&#125;</span>
+              <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;properties&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+                    &lt;a_bunch_of_github_links&gt;
+              <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;assetUri&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;https://ms-vscode.gallery.vsassets.io/_apis/public/gallery/publisher/ms-vscode/extension/live-server/0.5.2026020901/assetbyname&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;fallbackAssetUri&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;https://ms-vscode.gallerycdn.vsassets.io/extensions/ms-vscode/live-server/0.5.2026020901/1770629024303&quot;</span>
+            <span class="hljs-punctuation">&#125;</span>
+          <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;categories&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-string">&quot;Other&quot;</span>
+          <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;tags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;browser&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;html&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;live&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;livepreview&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;preview&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;refresh&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;reload&quot;</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;statistics&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;install&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">11966368.0</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;averagerating&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4.4358973503112793</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ratingcount&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">78.0</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;trendingdaily&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0.0022916290304234662</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;trendingmonthly&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">2.4470581465690677</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;trendingweekly&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0.5461268883145507</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;updateCount&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">19214822.0</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;weightedRating&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">4.4381077195781415</span>
+            <span class="hljs-punctuation">&#125;</span><span class="hljs-punctuation">,</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;statisticName&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;downloadCount&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;value&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">53216.0</span>
+            <span class="hljs-punctuation">&#125;</span>
+          <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;deploymentType&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">0</span>
+        <span class="hljs-punctuation">&#125;</span>
+      <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;pagingToken&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">&quot;resultMetadata&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+        <span class="hljs-punctuation">&#123;</span>
+          <span class="hljs-attr">&quot;metadataType&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;ResultCount&quot;</span><span class="hljs-punctuation">,</span>
+          <span class="hljs-attr">&quot;metadataItems&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+            <span class="hljs-punctuation">&#123;</span>
+              <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;TotalCount&quot;</span><span class="hljs-punctuation">,</span>
+              <span class="hljs-attr">&quot;count&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span>
+            <span class="hljs-punctuation">&#125;</span>
+          <span class="hljs-punctuation">]</span>
+        <span class="hljs-punctuation">&#125;</span>
+      <span class="hljs-punctuation">]</span>
+    <span class="hljs-punctuation">&#125;</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">&#125;</span></code></pre>
+	
+	</div>
+  <a type="button" href="/2026/03/16/vvhich-extension/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+			
+	
+	<!-- display as entry -->
+<div class="row">
+	<div class="col-md-8">
+		<h3 class="title">
+			<a href="/2023/01/23/a-study-in-obfuscation/" >A Study in Obfuscation</a>
+		</h3>
+		</div>
+	<div class="col-md-4">
+		<div class="date">post @ 2023-01-23  </div>
+		</div>
+	</div>
+	
+
+
+			<div class="entry">
+  <div class="row">
+	
+	
+		<p>In this blog series, we explore how to obfuscate a Metasploit payload to avoid detection by Antivirus Engines and shall try to go invisible.</p>
+<p>We would employ known techniques and see how they affect detection rates uploading the compiled executable to <a target="_blank" rel="noopener" href="https://antiscan.me/">AntiScan</a> as it does not submit the samples to the vendors.</p>
+<blockquote>
+<p><strong>Warning:</strong> Antiscan.me is no longer active so some links might be broken</p>
+</blockquote>
+<h2 id="Environment-Setup"><a href="#Environment-Setup" class="headerlink" title="Environment Setup"></a>Environment Setup</h2><p>To begin with, we would be needing some tools and setup to get started. The first thing is the unobfuscated shellcode we’ll be using: </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs bash">RAW_PAYLOAD = [<br>    0xfc, 0x48, 0x83, 0xe4, 0xf0, 0xe8, 0xc0, 0x00, 0x00, 0x00, 0x41, 0x51,<br>    0x41, 0x50, 0x52, 0x51, 0x56, 0x48, 0x31, 0xd2, 0x65, 0x48, 0x8b, 0x52,<br>    0x60, 0x48, 0x8b, 0x52, 0x18, 0x48, 0x8b, 0x52, 0x20, 0x48, 0x8b, 0x72, <br>    0x50, 0x48, 0x0f, 0xb7, 0x4a, 0x4a, 0x4d, 0x31, 0xc9, 0x48, 0x31, 0xc0, <br>    0xac, 0x3c, 0x61, 0x7c, 0x02, 0x2c, 0x20, 0x41, 0xc1, 0xc9, 0x0d, 0x41, <br>    0x01, 0xc1, 0xe2, 0xed, 0x52, 0x41, 0x51, 0x48, 0x8b, 0x52, 0x20, 0x8b, <br>    0x42, 0x3c, 0x48, 0x01, 0xd0, 0x8b, 0x80, 0x88, 0x00, 0x00, 0x00, 0x48, <br>    0x85, 0xc0, 0x74, 0x67, 0x48, 0x01, 0xd0, 0x50, 0x8b, 0x48, 0x18, 0x44, <br>    0x8b, 0x40, 0x20, 0x49, 0x01, 0xd0, 0xe3, 0x56, 0x48, 0xff, 0xc9, 0x41, <br>    0x8b, 0x34, 0x88, 0x48, 0x01, 0xd6, 0x4d, 0x31, 0xc9, 0x48, 0x31, 0xc0, <br>    0xac, 0x41, 0xc1, 0xc9, 0x0d, 0x41, 0x01, 0xc1, 0x38, 0xe0, 0x75, 0xf1, <br>    0x4c, 0x03, 0x4c, 0x24, 0x08, 0x45, 0x39, 0xd1, 0x75, 0xd8, 0x58, 0x44, <br>    0x8b, 0x40, 0x24, 0x49, 0x01, 0xd0, 0x66, 0x41, 0x8b, 0x0c, 0x48, 0x44, <br>    0x8b, 0x40, 0x1c, 0x49, 0x01, 0xd0, 0x41, 0x8b, 0x04, 0x88, 0x48, 0x01, <br>    0xd0, 0x41, 0x58, 0x41, 0x58, 0x5e, 0x59, 0x5a, 0x41, 0x58, 0x41, 0x59, <br>    0x41, 0x5a, 0x48, 0x83, 0xec, 0x20, 0x41, 0x52, 0xff, 0xe0, 0x58, 0x41, <br>    0x59, 0x5a, 0x48, 0x8b, 0x12, 0xe9, 0x57, 0xff, 0xff, 0xff, 0x5d, 0x48, <br>    0xba, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8d, 0x8d, <br>    0x01, 0x01, 0x00, 0x00, 0x41, 0xba, 0x31, 0x8b, 0x6f, 0x87, 0xff, 0xd5, <br>    0xbb, 0xf0, 0xb5, 0xa2, 0x56, 0x41, 0xba, 0xa6, 0x95, 0xbd, 0x9d, 0xff, <br>    0xd5, 0x48, 0x83, 0xc4, 0x28, 0x3c, 0x06, 0x7c, 0x0a, 0x80, 0xfb, 0xe0, <br>    0x75, 0x05, 0xbb, 0x47, 0x13, 0x72, 0x6f, 0x6a, 0x00, 0x59, 0x41, 0x89, <br>    0xda, 0xff, 0xd5, 0x63, 0x61, 0x6c, 0x63, 0x2e, 0x65, 0x78, 0x65, 0x00<br>]<br></code></pre></td></tr></table></figure>
+
+<p>This will be our base from where we start. The raw, untampered shellcode is placed in <code>scripts/obfuscator.py</code>. The python file describes a class <code>Obfuscator</code> which takes our shell code and obfuscates it to various levels which is used as the payload in <code>implant.cpp</code></p>
+<p>Next up, we need to set up our development environment. For this, we need to install <a target="_blank" rel="noopener" href="https://visualstudio.microsoft.com/vs/features/cplusplus/">Visual Studio’s C&#x2F;C++ Development Tools</a>.</p>
+<p>Once that is done, we can bring up any IDE of our choice and jump straight to coding. However, if you are using Visual Studio Code, I highly recommend having <code>x64 Native Tools Command Prompt</code> as your default. One way of doing is to add the full path to <code>VsDevCmd.bat</code> to  VS Code’s <code>settings.json</code> file as such:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br><br>    <span class="hljs-attr">&quot;workbench.colorTheme&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Default Dark+&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;terminal.integrated.shell.windows&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;cmd.exe&quot;</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;terminal.integrated.shellArgs.windows&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><br>        <span class="hljs-string">&quot;/k&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-string">&quot;x64&quot;</span><br>    <span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;terminal.integrated.automationShell.windows&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">null</span></span><span class="hljs-punctuation">,</span><br>    <span class="hljs-attr">&quot;explorer.confirmDelete&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+	
+	</div>
+  <a type="button" href="/2023/01/23/a-study-in-obfuscation/#more" class="btn btn-default more">Read More</a>
+</div>
+
+		
+
+		</div>
+
+		<!-- pagination -->
+		<div>
+  		<center>
+		<div class="pagination">
+
+   
+</div>
+
+  		</center>
+		</div>
+
+		
+		
+	</div> <!-- col-md-9 -->
+
+	
+		<div class="col-md-3">
+	<div id="sidebar">
+	
+			
+  <div id="site_search">
+   <div class="form-group">
+    <input type="text" id="local-search-input" name="q" results="0" placeholder="Search" class="st-search-input st-default-search-input form-control"/>
+   </div>  
+  <div id="local-search-result"></div>
+  </div>
+
+
+		
+			
+	<div class="widget">
+		<h4>Categories</h4>
+		<ul class="tag_box inline list-unstyled">
+		
+			<li><a href="/categories/hacking/">hacking<span>2</span></a></li>
+		
+		</ul>
+	</div>
+
+		
+			
+	<div class="widget">
+		<h4>Tag Cloud</h4>
+		<ul class="tag_box inline list-unstyled">		
+		
+			<li><a href="/tags/microsoft/">microsoft<span>1</span></a></li>
+		
+			<li><a href="/tags/malware/">malware<span>2</span></a></li>
+		
+			<li><a href="/tags/windows/">windows<span>1</span></a></li>
+		
+			<li><a href="/tags/c/">c<span>1</span></a></li>
+		
+			<li><a href="/tags/hacking/">hacking<span>1</span></a></li>
+		
+			<li><a href="/tags/rust/">rust<span>1</span></a></li>
+		
+		 
+		</ul>
+	</div>
+
+
+		
+			
+<div class="widget">
+  <h4>Recent Posts</h4>
+  <ul class="entry list-unstyled">
     
-    <br/>
+      <li>
+        <a href="/2026/06/07/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-1/" ><i class="fa fa-file-o"></i>Learning to write a LLVM Pa...</a>
+      </li>
     
-    <span>
-        &copy; 2026
-            @whokilleddb
-    </span>
+      <li>
+        <a href="/2026/03/16/vvhich-extension/" ><i class="fa fa-file-o"></i>VVhich Extension?</a>
+      </li>
     
-    <span>
-        Powered by <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>
-    </span>
-    <span>
-        Theme <a target="_blank" rel="noopener" href="https://github.com/mouyase/hexo-theme-zen">Zen</a>
-    </span>
-</footer>
-        
-    </body>
-</html>
+      <li>
+        <a href="/2023/01/23/a-study-in-obfuscation/" ><i class="fa fa-file-o"></i>A Study in Obfuscation</a>
+      </li>
+    
+  </ul>
+</div>
+
+		
+			
+<div class="widget">
+	<h4>Links</h4>
+	<ul class="blogroll list-unstyled">
+	
+		<li><i class="false"></i><a href="https://github.com/whokilleddb" title="" target="_blank"]);">github.com/whokilleddb</a></li>
+	
+	</ul>
+</div>
+
+
+		
+	</div> <!-- sidebar -->
+</div> <!-- col-md-3 -->
+
+	
+	
+</div> <!-- row-fluid -->
+	</div>
+  </div>
+  <div class="container-narrow">
+  <footer> <p>
+  
+  &copy; 2026 @whokilleddb's Blog
+  
+      powered by <a href="http://hexo.io/" target="_blank">Hexo</a>.Theme <a href="https://github.com/Ares-X/hexo-theme-freemind.bithack" target="_blank">freemind.bithack</a>  
+</p>
+ </footer>
+</div> <!-- container-narrow -->
+  
+
+
+  
+<a id="gotop" href="#">   
+  <span>⬆︎TOP</span>
+</a>
+
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/search.js"></script> 
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+
+   <script type="text/javascript">      
+     var search_path = "search.xml";
+	 if (search_path.length == 0) {
+	 	search_path = "search.xml";
+	 }
+	 var path = "/" + search_path;
+     searchFunc(path, 'local-search-input', 'local-search-result');
+   </script>
+
+</body>
+   </html>

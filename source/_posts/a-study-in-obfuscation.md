@@ -1,6 +1,6 @@
 ---
 title: "A Study in Obfuscation"
-date: 2026-03-16T16:59:32+05:30
+date: 2023-01-23T16:59:32+05:30
 tags: ["hacking", "malware", "c"]
 categories: ["hacking"]
 ---
