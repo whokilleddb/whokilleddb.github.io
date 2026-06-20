@@ -13,6 +13,8 @@ However, upon examining the extension code, I noticed a couple of things:
 
 So, I decided to take a deeper look. This blog documents the result of the research done quickly at an airport while I am on my way to present my fully finished 100+ slides deck(boy oh boy do I have to change those!) - but hopefully it's not _tooo_ incohorent. 
 
+<!-- more -->
+
 ## VVhere is the metadata coming from?
 
 ![](https://woforgmedia.wordonfire.org/wp-content/uploads/2024/10/30144433/the-witch.jpg)
