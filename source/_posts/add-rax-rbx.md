@@ -1,6 +1,6 @@
 ---
 title: Why does `add rax, rbx` encode to `48 01 D8` on x86_64?
-tags: []
+tags: ["low-level", "assembly", "x64"]
 categories: []
 date: 2026-06-21 02:25:54
 ---
@@ -131,25 +131,84 @@ In our case, since both of them are zero, we can condense the values to:
 
 ```
   3-bit code   Register (64-bit)
-    000          RAX
-    001          RCX
-    010          RDX
-    011          RBX
-    100          RSP *
-    101          RBP *
-    110          RSI
-    111          RDI
+    000          rax
+    001          rcx
+    010          rdx
+    011          rbx
+    100          rsp *
+    101          rbp *
+    110          rsi
+    111          rdi
 
 *NOTE: there is a bit more nuance here with the SIB stuff - but I will leave it for now (it's late here and i think i am a bit sleepy)
 ```
 
 So for our case, 
-- `Reg` is `011` aka `RBX`
-- `R/M` is `000` aka `RAX`
+- `Reg` is `011` aka `rbx`
+- `R/M` is `000` aka `rax`
 
 So with everything combined - we get `11 011 000` aka `0xD8` - the third byte has been demystified! Finally the last piece - the OPCODE byte!
 
 ## Opcode Byte: 0x01
 
+So at this point we know how the system: 
+- figures out if its a x64 instruction or an x86 instruction
+- What registers to use 
+- If we are referencing registers or addresses 
 
+But two questions remain unanswered:
+- What is the operation? Are we adding stuff? Are we subtracting stuff? What's going on?
+- What is the _direction_ of the operation? When we add `rax` and `rbx`, which registers gets the final value? 
 
+All this information is contained in the opcode byte. Again, converting the value to Base 2:
+
+```
+(0x01)₁₆ =  (00000001)₂
+```
+
+Breaking it down:
+
+```
+Bits:       | 7 | 6  | 5 | 4 | 3 | 2 | 1 | 0 |
+            +---+----+---+---+---+---+---+---+ 
+0xDB:       | 0 | 0  | 0 | 0 | 0 | 0 | 0 | 1 |
+            +---+----+---+---+---+---+---+---+ 
+            | Region |   ALU OP  | I | D | S |
+
+```
+
+Going part by part:
+
+- Bits 7:6 (⁶🤷‍♂️⁷) - It denotes the region of the Opcode table we should be looking at. Since for our example we are performing an arthimatic operation, we need to look at the ALU region of the opcode map. 
+- Bits: 5:3 - These are the selector bits - responsible for checking which of the 8 classic operations to perform: 
+
+    | Bits 5:3  |   Operation  |
+    |-----------|--------------|
+    |   000     |   ADD        |
+    |    001    |   OR         |
+    |    010    |   ADC        |
+    |    011    |   SBB        |
+    |    100    |   AND        |
+    |    101    |   SUB        |
+    |    110    |   XOR        |
+    |    111    |   CMP        |
+
+    Since we are using the `ADD` operation - the value for us would be `000`
+
+- Bit 2 - This indicates the CPU if it should expect a `Mod R/M` byte next:
+    - Bit 2 = 0: CPU expects a ModR/M byte next, reads Reg and R/M fields to find both operands
+    - Bit 2 = 1: CPU skips ModR/M entirely, hardcodes RAX as the destination, reads the remaining bytes as an immediate value
+- Bit 1 - This bit controls the _direction_ of the operation and answers the question, _"why is the final result stored in rax and not rbx?"_. Setting it to `0` indicates that the `R/M` field is the destination which we saw is set to `rax`. If it was set to `1`, the destination would have been `rbx`.
+- Bit 0: This just tells the CPU about the size of the operand. If the operands are 8bits (for example, if our expression was `add al, bl`) it is set to `0`, else `1`
+
+So now we can read `0x01` as: _"Hey, look at the ALU region of the opcode map - and perform the ADD operation. Store the result in whatever R/M says and btw, both operators have sizes greater than or equal to `WORD`"._
+
+-----
+
+So at this point we can see why `add rax, rbx` results in `48 01 D8`. While we did not touch a lot of topics (like `SIB` for one) - this is still good stuff to get us started. Before I leave, I would like to throw a little challenge to the readers who made it this far:
+
+> Why do both `48 01 D8` and `48 03 C3` encode `add rax, rbx`? Why does the assembler pick the first one? 
+
+Hint: Look how Opcode byte flips affect the `Mod R/M`. If you get stuck, reach out to me [@whokilleddb](https://x.com/whokilleddb). Till then, _Sayonara, Nerds!_ 
+
+![](../images/add-rax-rbx/browt.png)
