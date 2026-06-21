@@ -7,6 +7,8 @@ date: 2026-06-07 05:13:57
 
 This series of blogs is supposed to document my learning journey from a C/gcc nerd to a C++/LLVM chad. Expect this blog to be very informal, with the occasional rant, but it will document _everything_ that I have learnt, including C++ internals, gimmicks, LLVM quirks and other references.
 
+<!-- more -->
+
 # Setup 
 
 First thing first, we need to do some basic setup, starting with fetching the source code for the LLVM project:
