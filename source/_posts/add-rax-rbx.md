@@ -67,7 +67,89 @@ So what are `REX.W`, `REX.R`, `REX.X` and `REX.B`?
 
 - `REX.B` (Base): Extends the `modR/M r/m` field or the `SIB` base field. Similar to `REX.R`, this allows the source/destination operands to be mapped to the `R8–R15` registers, and therefore, for our case, it is `0`.
 
-So, this is why we get the `1000` value. So together with `0100`, we get `01001000` - the `0x48` byte we see. That's one mystery solved. Time to move to the next byte.
+So, this is why we get the `1000` value. So together with `0100`, we get `01001000` - the `0x48` byte we see. That's one mystery solved. 
 
-## The Opcode: `0x01`
+----
+
+Now, instead of going the next Opcode byte, we would take a look at the third piece of the puzzle: the `Mod R/M` byte. This would help us better understand the Opcode byte later. 
+
+----
+
+## The Mod R/M byte: `D8`
+
+The book describes the `Mod R/M` byte as follows: 
+
+```
+[Vol. 2A 2-3]
+
+The ModR/M byte contains three fields of information:
+- The mod field combines with the r/m field to form 32 possible values: eight registers and 24 addressing modes.
+- The reg/opcode field specifies either a register number or three more bits of opcode information. The purpose of the reg/opcode field is specified in the primary opcode.
+- The r/m field can specify a register as an operand or it can be combined with the mod field to encode an addressing mode. Sometimes, certain combinations of the mod field and the r/m field are used to express opcode information for some instructions.
+
+```
+
+There is also something called an `SIB` byte, but we wont need that for our chosen example. Again, let's convert the value to Base 2:
+
+```
+(0xD8)₁₆ =  (11011000)₂
+```
+
+Now, if we take a look at Figure 2-1 from the book:
+
+![](../images/add-rax-rbx/fig2-1.png)
+
+Focus on the Mod R/M byte expansion. So, if were to dividie the bits as shown, we would get:
+
+
+```
+Bits:       | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+            +---+---+---+---+---+---+---+---+ 
+0xDB:       | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 |
+            +---+---+---+---+---+---+---+---+ 
+            |  Mod  |    Reg    |    R/M    |
+```
+
+### The Mod bits
+
+The Mod bits tell the system about the nature of the operands - aka if you are adding to a register, address, offset, etc. It can take one of the 4 values:
+
+| MOD | Example |  Description |
+|-----|-------------|---------|
+| 00  | `add [rax], rbx` | Memory Address Mode (No Displacement) - the operand represents a memory location using the register as the base address | 
+| 01 | `add [rax+0x10], rbx` | Memory Address + 8-bit Displacement - Points to memory with an 8-bit signed value added to the base register |
+| 10 | `add [rax+0x10000]` |  Memory Address + 32-bit Displacement. Points to memory with a 32-bit signed value added to the base register | 
+| 11 | `add rax, rbx` | Register Direct Mode - the operands are both registers - which is the case for us |
+
+Therefore, we understand why the bits for Mod are `11`.
+
+### The Reg and R/M bits
+
+These are 3 bit values which act as selectors. Essentially, it tells the system which registers we are dealing with at the moment (we will talk about directionality later when we see the opcode part). Usually, they are combined with the REX prefix (REX.B extends R/M, and REX.R extends Reg) to act as a 4 bit selector - with 16 options.
+
+In our case, since both of them are zero, we can condense the values to: 
+
+```
+  3-bit code   Register (64-bit)
+    000          RAX
+    001          RCX
+    010          RDX
+    011          RBX
+    100          RSP *
+    101          RBP *
+    110          RSI
+    111          RDI
+
+*NOTE: there is a bit more nuance here with the SIB stuff - but I will leave it for now (it's late here and i think i am a bit sleepy)
+```
+
+So for our case, 
+- `Reg` is `011` aka `RBX`
+- `R/M` is `000` aka `RAX`
+
+So with everything combined - we get `11 011 000` aka `0xD8` - the third byte has been demystified! Finally the last piece - the OPCODE byte!
+
+## Opcode Byte: 0x01
+
+
 
