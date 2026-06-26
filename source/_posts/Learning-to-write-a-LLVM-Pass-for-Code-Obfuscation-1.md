@@ -7,6 +7,8 @@ date: 2026-06-07 05:13:57
 
 This series of blogs is supposed to document my learning journey from a C/gcc nerd to a C++/LLVM chad. Expect this blog to be very informal, with the occasional rant, but it will document _everything_ that I have learnt, including C++ internals, gimmicks, LLVM quirks and other references.
 
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyC5W-orQb4vFVY1wjh5ffQ5_jxETifNbpGENj81FQDuxI7Lbd8dUObEa4-WyUFB1_g7f2CgdSQMAOker1unrwc0qc8ihv_QB3FjlB0go&s=10)
+
 <!-- more -->
 
 # Setup 
