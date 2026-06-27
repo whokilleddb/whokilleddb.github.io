@@ -167,4 +167,46 @@ The first line reserves a 1 bit address on the stack to hold the return value(`%
 br i1 %5, label %6, label %7
 ```
 
+The value stored in `%3` is immediately popped back into `%4` (yes, this is redundant code - remember we are not optimizing things as all?). `%5` stores the value of the operation `x>0`. The `icmp` part stands for integers (signed) and the `sgt` means _signed greater than_ - so this makes sure we are doing a signed comparision against 0 and stores the result. The last line reads as follows: If the 1 bit(`i1`) stored at `%5` is true, jump to `%6`, else jump to `%7`. The `br` keyword represents that the code is branching from the given statement.
+
+The key thing to understand: `-O0` puts everything on the stack. It doesn't try to keep values in registers, so each variable gets an `alloca` (stack allocation) and is shuffled in/out via store/load. Most optimizations should get rid of the redundant operations. 
+
+Next, we have the branches:
+
+```
+6:                                                ; preds = %1
+  store i1 true, ptr %2, align 1
+  br label %8
+
+7:                                                ; preds = %1
+  store i1 false, ptr %2, align 1
+  br label %8
+
+```
+
+First, we have the branch labels `%6` and `%7` (DONT!). Notice the `preds = %1` comment? It shows which blocks can reach the respective block. Since both blocks are just preceeded by the entry block aka `%1` it says `preds=1` (`preds`=predecessor).  Each branch corresponds to each arm of the if/else condition. It stores a 1 bit (`i1`) value in `%2`, and then makes an unconditional jump to the code block represented by `%8`.  
+
+The final block is: 
+
+```
+%9 = load i1, ptr %2, align 1
+ret i1 %9
+```
+
+We load the value stored in `%2` into another variable `%9` and return it. Pretty simple, right? 
+
+But this code was very inefficient. Let's see what happens when we turn up the optimization. After compiling with `-O3` for examples, the resulting IR becomes:
+
+```
+define dso_local noundef zeroext i1 @classify(i32 noundef %0) local_unnamed_addr #0 {
+  %2 = icmp sgt i32 %0, 0
+  ret i1 %2
+}
+```
+
+Notice how much more efficient the code becomes? LLVM allows us to write our own optimizations, but that's out of the scope (for now atleast?). 
+
+Now that we understand a bit of IR, time to move onto the next topic: Code blocks 
+
+# Code Blocks in LLVM
 
