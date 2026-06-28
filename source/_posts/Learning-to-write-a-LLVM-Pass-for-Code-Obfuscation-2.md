@@ -206,7 +206,86 @@ define dso_local noundef zeroext i1 @classify(i32 noundef %0) local_unnamed_addr
 
 Notice how much more efficient the code becomes? LLVM allows us to write our own optimizations, but that's out of the scope (for now atleast?). 
 
+**SSA - Single Static Assignment**
+
+One rule of LLVM IR is SSA which means one very simple thing: Every variable is assigned _ONLY ONCE_. What does this mean? Let's see with some code:
+
+```c
+int x = 1;
+x = x+1;
+x = x*5;
+```
+
+The IR for this looks as follows:
+
+```
+%1 = alloca i32, align 4
+store i32 1, ptr %1, align 4
+%2 = load i32, ptr %1, align 4
+%3 = add nsw i32 %2, 1
+store i32 %3, ptr %1, align 4
+%4 = load i32, ptr %1, align 4
+%5 = mul nsw i32 %4, 5
+store i32 %5, ptr %1, align 4
+%6 = load i32, ptr %1, align 4
+ret i32 %6
+```
+
+See, how no variable is reused? A new variable is used with every store/load instruction. This is a small rule which we need to keep in mind for future references.
+
+---------------
+
 Now that we understand a bit of IR, time to move onto the next topic: Code blocks 
 
-# Code Blocks in LLVM
+# Basic Blocks in LLVM
+
+A **basic block** is a maximal sequence of instructions with:
+- **exactly one entry point** (the first instruction — you can only jump *to* the top of the block), and
+- **exactly one exit point** (the last instruction — control leaves *only* from the bottom).
+
+This idea creates a bunch of paradigms:
+
+- A block has NO BRANCHES in the middle - all code must enter from the _entrypoint_ aka the first instruction and nothing except the last instruction can transfer control elsewhere
+- Each block has exactly ONE TERMINATOR and it is at the very end. A terminator instruction is one which controls where the control flow goes next. Stuff like if/else, switch case, goto, returns
+
+One thing to note is that a basic block _CAN CONTAIN_ a function call - A normal `call` is an ordinary instruction. Control returns right after it, so it does not end the block. A `call` is just another instruction — execution flows into it and out the other side. Only *terminators* end blocks. (The one exception is `invoke`, used for exceptions, which *is* a terminator because it has two outgoing edges: normal return and exception.)
+
+# Phi Nodes
+
+When two different paths through the Control Flow Graph(CFG) produce a value that is needed in a block that both paths reach, LLVM IR uses a `phi` instruction to select the correct value. Let's take an example:
+
+```c
+int x;
+if (condition) {
+  x = 10;
+} else {
+  x = 20;
+}
+int y = x + 1;
+```
+
+In SSA form, we cannot assign to `x` twice. So LLVM generates:
+
+```
+entry:
+  br i1 %condition, label %true_branch, label %false_branch
+
+true_branch:
+  br label %merge           ; x "is" 10 on this path
+
+false_branch:
+  br label %merge           ; x "is" 20 on this path
+
+merge:
+  %x = phi i32 [ 10, %true_branch ], [ 20, %false_branch ]
+  %y = add i32 %x, 1
+```
+
+The `phi` instruction essentially says: _"My value is 10 if I was reached from `%true_branch`, or 20 if I was reached from `%false_branch`."_
+
+As a rule, if a basic block has a `phi` instruction - it must be the first instruction of that block.
+
+# Dominators and Dominator Trees
+
+(_Sigh_)
 
