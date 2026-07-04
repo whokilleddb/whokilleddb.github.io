@@ -289,3 +289,57 @@ As a rule, if a basic block has a `phi` instruction - it must be the first instr
 
 (_Sigh_)
 
+A Basic Block A is said to _dominate_ Basic Block B if every possible path from the function start to Block B passes through Block A - aka if a control flow is at BLOCK B, it MUST HAVE PASSED THROUGH BLOCK A. It goes without saying that the entry block dominates all other blocks in the function's CFG. 
+
+-------------------
+
+# LLVM C+ API for CFG Traversal 
+
+## The LLVM Hierarchy Map
+
+```
+Module
+  └── Function
+        └── BasicBlock
+              └── Instruction
+```
+
+For C-heads like me, we can think of it like nested Linked Lists:
+
+```c
+struct Module {
+    struct Function *functions;
+};
+struct Function {
+    struct BasicBlock *blocks;
+};
+struct BasicBlock {
+    struct Instruction *instructions;
+};
+```
+
+In C++, LLVM models all of these as iterable containers. The `Function` class can be iterated like a `std::vector<BasicBlock>`, and the `BasicBlock` class can be iterated like a `std::vector<Instruction>`.
+
+## Iterating over Basic Blocks in a Function 
+
+Time to write some code - let's write a program which iterates over all the basic blocks in a Function and prints some basic information. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
