@@ -322,24 +322,181 @@ In C++, LLVM models all of these as iterable containers. The `Function` class ca
 
 ## Iterating over Basic Blocks in a Function 
 
-Time to write some code - let's write a program which iterates over all the basic blocks in a Function and prints some basic information. 
+Time to write some code - let's write a program which iterates over all the basic blocks in a Function and prints some basic information.  
+
+```c++
+// BlockIterator.cpp
+#include "llvm/IR/PassManager.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/CFG.h"       
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Support/raw_ostream.h"
+
+using namespace llvm;
+
+namespace  {
+  static std::string blockId(const BasicBlock &BB) {
+    std::string s;
+    raw_string_ostream os(s);
+    os << "BB_" << static_cast<const void *>(&BB);
+    return os.str();
+  }
+
+  static std::string blockLabel(const BasicBlock &BB) {
+    // Prefer the block's own name; fall back to "<unnamed>".
+    if (BB.hasName())
+     return BB.getName().str();
+    return "<unnamed>";
+  }
 
 
+  struct BlockIterator: public PassInfoMixin<BlockIterator> {
+      PreservedAnalyses run(Module &M, ModuleAnalysisManager &) {
+      for (Function &F: M) {
+        if (F.isDeclaration()) {
+          outs() << "[+] Found Declaration: " << F.getName() << "\n";
+          continue;
+        }
+        
+        outs() << "[+] Found Function: " << F.getName() << "\n";
 
+        for (BasicBlock & BB: F) {
+          outs() <<"\t[+] Block: " << blockLabel(BB) << " (" << blockId(BB) << ")\n";
+          
+          if (BB.isEntryBlock()) {
+            outs() << "\t[+] Entry block identified\n";
+          }
 
+          for (Instruction &I: BB) {
+            outs() << "\t\t[+] Instruction: " << I << "\n";
+          }
+        }
+        outs() <<"\n";
+      }
 
+      // We did not make any changes to the IR
+      return PreservedAnalyses::all();
+    };
+  };
+} 
 
+llvm::PassPluginLibraryInfo getCFGPrinterPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "BlockIterator", LLVM_VERSION_STRING,
+          [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, ModulePassManager &MPM,
+                   ArrayRef<PassBuilder::PipelineElement>) {
+                  if (Name == "block-iterator") {
+                    MPM.addPass(BlockIterator());
+                    return true;
+                  }
+                  return false;
+                 });
+           }};
+} 
 
+extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+llvmGetPassPluginInfo() {
+  return getCFGPrinterPluginInfo();
+}
+```
 
+The code might look really scary, but its kinda like this: 
 
+```c
 
+for (int i=0; i<f_count; i++>) {
+  // Print function names 
+  for (int j=0; j<bb_count; j++>) {
+    // Print basic block count
+    for (int k=0; k<inst_count; k++) {
+      // Print instruction information
+    }
+  }
+}
+```
 
+Seems easy enough. We would also need to update our `CMakeLists.txt` as follows:
 
+```
+cmake_minimum_required(VERSION 3.20)
+project(BlockIterator LANGUAGES C CXX)
 
+find_package(LLVM REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+include(AddLLVM)
 
+add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-fno-rtti)
 
+add_library(BlockIterator MODULE BlockIterator.cpp)
+```
 
+For our demo, we will use an updated version of `classify.c` program:
 
+```
+int classify(int x) {
+    int result;
+    if (x > 0)
+        result = 1;
+    else
+        result = -1;
+    return result;
+}
 
+int oddoreven(int x) {
+	return x%2 == 0;
+}
+```
 
+And then compile and run it all with:
+
+```bash
+$ cmake -DLLVM_DIR=$(llvm-config --cmakedir) . && cmake --build .
+$ clang -O0 -S -emit-llvm classify.c -o classify.ll 
+$ opt-17 -load-pass-plugin ./libBlockIterator.so -passes='block-iterator' -disable-output classify.ll
+```
+
+Running this should present us with:
+
+```
+[+] Found Function: classify
+	[+] Block: <unnamed> (BB_0x559d49267e00)
+	[+] Entry block identified
+		[+] Instruction:   %2 = alloca i32, align 4
+		[+] Instruction:   %3 = alloca i32, align 4
+		[+] Instruction:   store i32 %0, ptr %2, align 4
+		[+] Instruction:   %4 = load i32, ptr %2, align 4
+		[+] Instruction:   %5 = icmp sgt i32 %4, 0
+		[+] Instruction:   br i1 %5, label %6, label %7
+	[+] Block: <unnamed> (BB_0x559d49269c60)
+		[+] Instruction:   store i32 1, ptr %3, align 4
+		[+] Instruction:   br label %8
+	[+] Block: <unnamed> (BB_0x559d49269cb0)
+		[+] Instruction:   store i32 -1, ptr %3, align 4
+		[+] Instruction:   br label %8
+	[+] Block: <unnamed> (BB_0x559d49269df0)
+		[+] Instruction:   %9 = load i32, ptr %3, align 4
+		[+] Instruction:   ret i32 %9
+
+[+] Found Function: oddoreven
+	[+] Block: <unnamed> (BB_0x559d4926a6f0)
+	[+] Entry block identified
+		[+] Instruction:   %2 = alloca i32, align 4
+		[+] Instruction:   store i32 %0, ptr %2, align 4
+		[+] Instruction:   %3 = load i32, ptr %2, align 4
+		[+] Instruction:   %4 = srem i32 %3, 2
+		[+] Instruction:   %5 = icmp eq i32 %4, 0
+		[+] Instruction:   %6 = zext i1 %5 to i32
+		[+] Instruction:   ret i32 %6
+```
+
+So everything works out just as we wanted! That's good news. Now we know how to get down to the instruction level with LLVM. Now while I want to end the blog here(brain.exe isn't working), there is one last thing I want to do.
+
+## Spliting Blocks for fun 
 
