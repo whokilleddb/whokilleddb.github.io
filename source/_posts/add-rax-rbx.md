@@ -7,7 +7,7 @@ date: 2026-06-21 02:25:54
 
 While learning more about x86_64, I went down a rabbit hole recently, and it all started with this:
 
-<img src="../images/add-rax-rbx/defucse.png" style="display:block; margin:0;" />
+<img src="/images/add-rax-rbx/defucse.png" style="display:block; margin:0;" />
 
 <!-- more -->
 

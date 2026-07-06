@@ -7,6 +7,8 @@ date: 2026-06-07 05:13:57
 
 This series of blogs is supposed to document my learning journey from a C/gcc nerd to a C++/LLVM chad. Expect this blog to be very informal, with the occasional rant, but it will document _everything_ that I have learnt, including C++ internals, gimmicks, LLVM quirks and other references.
 
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyC5W-orQb4vFVY1wjh5ffQ5_jxETifNbpGENj81FQDuxI7Lbd8dUObEa4-WyUFB1_g7f2CgdSQMAOker1unrwc0qc8ihv_QB3FjlB0go&s=10)
+
 <!-- more -->
 
 # Setup 
@@ -397,6 +399,8 @@ Which is pretty simple - we just print the function names. Now go follow the res
 ------------------
 
 Hi! You are back! So at this point you should have a basic idea of how the thing works and written your first pass. But this doesn't do anything useful. Also, in the example, we see they are using IR code - not something super useful. Ideally, we would want a clang flag or some other way to pass our C/C++ code directly. So I am planning to in the long run (as in by the end of this series) to implement something of that sort. Let's see how it goes! Wish me luck and see you soon!
+
+> [Part 2](https://whokilleddb.github.io/2026/06/26/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-2/) is out!
 
 ## References
 

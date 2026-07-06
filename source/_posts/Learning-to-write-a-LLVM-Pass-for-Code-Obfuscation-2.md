@@ -1,0 +1,867 @@
+---
+title: "Learning to write a LLVM Pass for Code Obfuscation #2"
+tags: []
+categories: []
+date: 2026-06-26 03:17:58
+---
+
+This blog is a continuation of the [previous blog](https://whokilleddb.github.io/2026/06/07/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-1/) where we covered some basics of C++, created a demo pass and prints function names following the LLVM guide. In this second part, we are gonna [Leeroy Genkins](https://www.youtube.com/watch?v=hooKVstzbz0) it and dive straight into writing LLVM passes. 
+
+![](../images/llvm/leeroy-jenkins.png)
+
+<!--more-->
+
+# LLVM, IR and Clang
+
+What even is LLVM IR? I am hoping that people reading this have _some_ idea about what an IR is, but we need to see it in action. So, let's start with a simple C code:
+
+```c
+// classify.c
+
+bool classify(int x) {
+    if (x > 0) return true;
+    else return false;
+}
+```
+
+Then, we can produce the IR with clang as follows:
+
+```
+clang -O0 -emit-llvm -S classify.c -o classify.ll
+```
+
+where,
+
+`clang` is the llvm compiler frontend (for, just the _compiler_)
+`-O0` turns off optimizations
+`-emit-llvm` tells clang to produce LLVM IR rather than native machine code
+`-S` tells clang to emit IR in text form 
+
+This should produce a `classify.ll` file as follows:
+
+```c
+; ModuleID = 'classify.c'
+source_filename = "classify.c"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local zeroext i1 @classify(i32 noundef %0) #0 {
+  %2 = alloca i1, align 1
+  %3 = alloca i32, align 4
+  store i32 %0, ptr %3, align 4
+  %4 = load i32, ptr %3, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %1
+  store i1 true, ptr %2, align 1
+  br label %8
+
+7:                                                ; preds = %1
+  store i1 false, ptr %2, align 1
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i1, ptr %2, align 1
+  ret i1 %9
+}
+
+attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4}
+!llvm.ident = !{!5}
+
+!0 = !{i32 1, !"wchar_size", i32 4}
+!1 = !{i32 8, !"PIC Level", i32 2}
+!2 = !{i32 7, !"PIE Level", i32 2}
+!3 = !{i32 7, !"uwtable", i32 2}
+!4 = !{i32 7, !"frame-pointer", i32 2}
+!5 = !{!"Debian clang version 19.1.7 (3+b1)"}
+```
+
+What we would be focusing on for right now is this part of the code:
+
+```
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local zeroext i1 @classify(i32 noundef %0) #0 {
+  %2 = alloca i1, align 1
+  %3 = alloca i32, align 4
+  store i32 %0, ptr %3, align 4
+  %4 = load i32, ptr %3, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %1
+  store i1 true, ptr %2, align 1
+  br label %8
+
+7:                                                ; preds = %1
+  store i1 false, ptr %2, align 1
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i1, ptr %2, align 1
+  ret i1 %9
+}
+```
+
+Lets take this line-by-line: 
+
+`; Function Attrs: noinline nounwind optnone uwtable`
+
+This specifies the function's attributes(duh!):
+
+`noinline`: The function must never be inlined into its callers. The optimizer is forbidden from substituting the body at call sites.
+`nounwind`:  The function does not throw / unwind exceptions. This is standard for C code and lets the compiler skip generating exception-handling (unwind) tables and bookkeeping.
+`optnone`: Do not optimize this function. It tells optimization passes to leave the function alone.
+`uwtable`: Generate an unwind table for it anyway — stack-frame metadata so debuggers/profilers and stack unwinders can walk the call stack (needed for backtraces, even though the function itself won't throw).
+
+`nounwind` and `uwtable` reflect the language/platform: C functions don't unwind (`nounwind`), but the Linux x86-64 ABI still wants unwind tables for reliable backtraces (`uwtable`).
+
+`define dso_local zeroext i1 @classify(i32 noundef %0) #0`
+
+This is the function definition in IR form:
+
+`define`: this tells the compiler that this is the actual function definition (with a body) instead of a function declaration. 
+`dso_local`: this means that the function will live in the same DSO(dynamic shared object) as any code referencing it - which means the compiler can use direct calls without needing to go through PLT/GOT 
+`zeroext i1`: Since we are returning a bool - which is a 1 bit value (signified by `i1`) - we need to _zero extend_ the wider register where it is places (ret values are usually returned by placing them in `rax`)
+`@classify`: This is the global symbol name for our function. In LLVM, global symbols are denoted by the `@` prefix and local symbols are prefixed by `%`
+`i32 noundef %0`: Remember how the `classify()` function took an integer as an input? This block specifies exactly that. The `i32` means the input is an integer which can never be undefined(`noundef`) - and %0 is just the variable name
+`#0` : This refers to the attribute group `attributes #0` at the bottom - we would leave this for now - and might come back to this later if we need to. 
+
+```
+%2 = alloca i1, align 1
+%3 = alloca i32, align 4
+store i32 %0, ptr %3, align 4
+%4 = load i32, ptr %3, align 4
+%5 = icmp sgt i32 %4, 0
+br i1 %5, label %6, label %7
+```
+
+This code block is called the _entry block_ - all calls to the function hHAVE TO pass through this block regardless of the input value. Now one thing to note: LLVM usually assigns labels to code blocks(what is a code block? We will get to a more formal definition later). However when generating the textual IR, it skips naming the entry block but internally, it still consumes a label. LLVM IR, every code block and every value needs a name. We can specify an explicit name, but in our case, we did not, so LLVM assigns sequential integers: %0, %1, %2, and so on. Since we used `%0` to denote the input variable, this block uses the (hidden) label `1`, so the right definition would be:
+
+```
+1: 
+    %2 = alloca i1, align 1
+    %3 = alloca i32, align 4
+    store i32 %0, ptr %3, align 4
+    %4 = load i32, ptr %3, align 4
+    %5 = icmp sgt i32 %4, 0
+    br i1 %5, label %6, label %7
+```
+
+Now, getting to the actual code block:
+
+```
+%2 = alloca i1, align 1
+%3 = alloca i32, align 4
+store i32 %0, ptr %3, align 4
+```
+
+The first line reserves a 1 bit address on the stack to hold the return value(`%2`). The second value(`%3`) creates a local variable to store the value of the input value locally. The third line copies the value of the input parameter into the slot.
+
+```
+%4 = load i32, ptr %3, align 4
+%5 = icmp sgt i32 %4, 0
+br i1 %5, label %6, label %7
+```
+
+The value stored in `%3` is immediately popped back into `%4` (yes, this is redundant code - remember we are not optimizing things as all?). `%5` stores the value of the operation `x>0`. The `icmp` part stands for integers (signed) and the `sgt` means _signed greater than_ - so this makes sure we are doing a signed comparision against 0 and stores the result. The last line reads as follows: If the 1 bit(`i1`) stored at `%5` is true, jump to `%6`, else jump to `%7`. The `br` keyword represents that the code is branching from the given statement.
+
+The key thing to understand: `-O0` puts everything on the stack. It doesn't try to keep values in registers, so each variable gets an `alloca` (stack allocation) and is shuffled in/out via store/load. Most optimizations should get rid of the redundant operations. 
+
+Next, we have the branches:
+
+```
+6:                                                ; preds = %1
+  store i1 true, ptr %2, align 1
+  br label %8
+
+7:                                                ; preds = %1
+  store i1 false, ptr %2, align 1
+  br label %8
+
+```
+
+First, we have the branch labels `%6` and `%7` (DONT!). Notice the `preds = %1` comment? It shows which blocks can reach the respective block. Since both blocks are just preceeded by the entry block aka `%1` it says `preds=1` (`preds`=predecessor).  Each branch corresponds to each arm of the if/else condition. It stores a 1 bit (`i1`) value in `%2`, and then makes an unconditional jump to the code block represented by `%8`.  
+
+The final block is: 
+
+```
+%9 = load i1, ptr %2, align 1
+ret i1 %9
+```
+
+We load the value stored in `%2` into another variable `%9` and return it. Pretty simple, right? 
+
+But this code was very inefficient. Let's see what happens when we turn up the optimization. After compiling with `-O3` for examples, the resulting IR becomes:
+
+```
+define dso_local noundef zeroext i1 @classify(i32 noundef %0) local_unnamed_addr #0 {
+  %2 = icmp sgt i32 %0, 0
+  ret i1 %2
+}
+```
+
+Notice how much more efficient the code becomes? LLVM allows us to write our own optimizations, but that's out of the scope (for now atleast?). 
+
+**SSA - Single Static Assignment**
+
+One rule of LLVM IR is SSA which means one very simple thing: Every variable is assigned _ONLY ONCE_. What does this mean? Let's see with some code:
+
+```c
+int x = 1;
+x = x+1;
+x = x*5;
+```
+
+The IR for this looks as follows:
+
+```
+%1 = alloca i32, align 4
+store i32 1, ptr %1, align 4
+%2 = load i32, ptr %1, align 4
+%3 = add nsw i32 %2, 1
+store i32 %3, ptr %1, align 4
+%4 = load i32, ptr %1, align 4
+%5 = mul nsw i32 %4, 5
+store i32 %5, ptr %1, align 4
+%6 = load i32, ptr %1, align 4
+ret i32 %6
+```
+
+See, how no variable is reused? A new variable is used with every store/load instruction. This is a small rule which we need to keep in mind for future references.
+
+---------------
+
+Now that we understand a bit of IR, time to move onto the next topic: Code blocks 
+
+# Basic Blocks in LLVM
+
+A **basic block** is a maximal sequence of instructions with:
+- **exactly one entry point** (the first instruction — you can only jump *to* the top of the block), and
+- **exactly one exit point** (the last instruction — control leaves *only* from the bottom).
+
+This idea creates a bunch of paradigms:
+
+- A block has NO BRANCHES in the middle - all code must enter from the _entrypoint_ aka the first instruction and nothing except the last instruction can transfer control elsewhere
+- Each block has exactly ONE TERMINATOR and it is at the very end. A terminator instruction is one which controls where the control flow goes next. Stuff like if/else, switch case, goto, returns
+
+One thing to note is that a basic block _CAN CONTAIN_ a function call - A normal `call` is an ordinary instruction. Control returns right after it, so it does not end the block. A `call` is just another instruction — execution flows into it and out the other side. Only *terminators* end blocks. (The one exception is `invoke`, used for exceptions, which *is* a terminator because it has two outgoing edges: normal return and exception.)
+
+# Phi Nodes
+
+When two different paths through the Control Flow Graph(CFG) produce a value that is needed in a block that both paths reach, LLVM IR uses a `phi` instruction to select the correct value. Let's take an example:
+
+```c
+int x;
+if (condition) {
+  x = 10;
+} else {
+  x = 20;
+}
+int y = x + 1;
+```
+
+In SSA form, we cannot assign to `x` twice. So LLVM generates:
+
+```
+entry:
+  br i1 %condition, label %true_branch, label %false_branch
+
+true_branch:
+  br label %merge           ; x "is" 10 on this path
+
+false_branch:
+  br label %merge           ; x "is" 20 on this path
+
+merge:
+  %x = phi i32 [ 10, %true_branch ], [ 20, %false_branch ]
+  %y = add i32 %x, 1
+```
+
+The `phi` instruction essentially says: _"My value is 10 if I was reached from `%true_branch`, or 20 if I was reached from `%false_branch`."_
+
+As a rule, if a basic block has a `phi` instruction - it must be the first instruction of that block.
+
+# Dominators and Dominator Trees
+
+(_Sigh_)
+
+A Basic Block A is said to _dominate_ Basic Block B if every possible path from the function start to Block B passes through Block A - aka if a control flow is at BLOCK B, it MUST HAVE PASSED THROUGH BLOCK A. It goes without saying that the entry block dominates all other blocks in the function's CFG. 
+
+A Dominator Tree is just a data structure that represents dominance relationships in a function's Control Flow Graph (CFG) - aka who-dominates-who. From [
+2017 LLVM Developers’ Meeting: J. Kuderski “Dominator Trees and incremental updates that ... ”](https://www.youtube.com/watch?v=bNV18Wy-J0U):
+
+> Tree T is the dominator tree if and only if it has the parent and the sibling properties. In a dominator tree, if a block A immediately dominates block B, then A is the parent of B.
+
+I would highly recommend going through the talk (its just 35 minutes!) or atleast the first 5 minutes.
+
+
+-------------------
+
+# LLVM C+ API for CFG Traversal 
+
+## The LLVM Hierarchy Map
+
+```
+Module
+  └── Function
+        └── BasicBlock
+              └── Instruction
+```
+
+For C-heads like me, we can think of it like nested Linked Lists:
+
+```c
+struct Module {
+    struct Function *functions;
+};
+struct Function {
+    struct BasicBlock *blocks;
+};
+struct BasicBlock {
+    struct Instruction *instructions;
+};
+```
+
+In C++, LLVM models all of these as iterable containers. The `Function` class can be iterated like a `std::vector<BasicBlock>`, and the `BasicBlock` class can be iterated like a `std::vector<Instruction>`.
+
+## Iterating over Basic Blocks in a Function 
+
+Time to write some code - let's write a program which iterates over all the basic blocks in a Function and prints some basic information.  
+
+```c++
+// BlockIterator.cpp
+#include "llvm/IR/PassManager.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/CFG.h"       
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Support/raw_ostream.h"
+
+using namespace llvm;
+
+namespace  {
+  static std::string blockId(const BasicBlock &BB) {
+    std::string s;
+    raw_string_ostream os(s);
+    os << "BB_" << static_cast<const void *>(&BB);
+    return os.str();
+  }
+
+  static std::string blockLabel(const BasicBlock &BB) {
+    // Prefer the block's own name; fall back to "<unnamed>".
+    if (BB.hasName())
+     return BB.getName().str();
+    return "<unnamed>";
+  }
+
+
+  struct BlockIterator: public PassInfoMixin<BlockIterator> {
+      PreservedAnalyses run(Module &M, ModuleAnalysisManager &) {
+      for (Function &F: M) {
+        if (F.isDeclaration()) {
+          outs() << "[+] Found Declaration: " << F.getName() << "\n";
+          continue;
+        }
+        
+        outs() << "[+] Found Function: " << F.getName() << "\n";
+
+        for (BasicBlock & BB: F) {
+          outs() <<"\t[+] Block: " << blockLabel(BB) << " (" << blockId(BB) << ")\n";
+          
+          if (BB.isEntryBlock()) {
+            outs() << "\t[+] Entry block identified\n";
+          }
+
+          for (Instruction &I: BB) {
+            outs() << "\t\t[+] Instruction: " << I << "\n";
+          }
+        }
+        outs() <<"\n";
+      }
+
+      // We did not make any changes to the IR
+      return PreservedAnalyses::all();
+    };
+  };
+} 
+
+llvm::PassPluginLibraryInfo getCFGPrinterPluginInfo() {
+  return {LLVM_PLUGIN_API_VERSION, "BlockIterator", LLVM_VERSION_STRING,
+          [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, ModulePassManager &MPM,
+                   ArrayRef<PassBuilder::PipelineElement>) {
+                  if (Name == "block-iterator") {
+                    MPM.addPass(BlockIterator());
+                    return true;
+                  }
+                  return false;
+                 });
+           }};
+} 
+
+extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+llvmGetPassPluginInfo() {
+  return getCFGPrinterPluginInfo();
+}
+```
+
+The code might look really scary, but its kinda like this: 
+
+```c
+
+for (int i=0; i<f_count; i++>) {
+  // Print function names 
+  for (int j=0; j<bb_count; j++>) {
+    // Print basic block count
+    for (int k=0; k<inst_count; k++) {
+      // Print instruction information
+    }
+  }
+}
+```
+
+Seems easy enough. We would also need to update our `CMakeLists.txt` as follows:
+
+```
+cmake_minimum_required(VERSION 3.20)
+project(BlockIterator LANGUAGES C CXX)
+
+find_package(LLVM REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+include(AddLLVM)
+
+add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-fno-rtti)
+
+add_library(BlockIterator MODULE BlockIterator.cpp)
+```
+
+For our demo, we will use an updated version of `classify.c` program:
+
+```
+int classify(int x) {
+    int result;
+    if (x > 0)
+        result = 1;
+    else
+        result = -1;
+    return result;
+}
+
+int oddoreven(int x) {
+	return x%2 == 0;
+}
+```
+
+And then compile and run it all with:
+
+```bash
+$ cmake -DLLVM_DIR=$(llvm-config --cmakedir) . && cmake --build .
+$ clang -O0 -S -emit-llvm classify.c -o classify.ll 
+$ opt-17 -load-pass-plugin ./libBlockIterator.so -passes='block-iterator' -disable-output classify.ll
+```
+
+Running this should present us with:
+
+```
+[+] Found Function: classify
+	[+] Block: <unnamed> (BB_0x559d49267e00)
+	[+] Entry block identified
+		[+] Instruction:   %2 = alloca i32, align 4
+		[+] Instruction:   %3 = alloca i32, align 4
+		[+] Instruction:   store i32 %0, ptr %2, align 4
+		[+] Instruction:   %4 = load i32, ptr %2, align 4
+		[+] Instruction:   %5 = icmp sgt i32 %4, 0
+		[+] Instruction:   br i1 %5, label %6, label %7
+	[+] Block: <unnamed> (BB_0x559d49269c60)
+		[+] Instruction:   store i32 1, ptr %3, align 4
+		[+] Instruction:   br label %8
+	[+] Block: <unnamed> (BB_0x559d49269cb0)
+		[+] Instruction:   store i32 -1, ptr %3, align 4
+		[+] Instruction:   br label %8
+	[+] Block: <unnamed> (BB_0x559d49269df0)
+		[+] Instruction:   %9 = load i32, ptr %3, align 4
+		[+] Instruction:   ret i32 %9
+
+[+] Found Function: oddoreven
+	[+] Block: <unnamed> (BB_0x559d4926a6f0)
+	[+] Entry block identified
+		[+] Instruction:   %2 = alloca i32, align 4
+		[+] Instruction:   store i32 %0, ptr %2, align 4
+		[+] Instruction:   %3 = load i32, ptr %2, align 4
+		[+] Instruction:   %4 = srem i32 %3, 2
+		[+] Instruction:   %5 = icmp eq i32 %4, 0
+		[+] Instruction:   %6 = zext i1 %5 to i32
+		[+] Instruction:   ret i32 %6
+```
+
+So everything works out just as we wanted! That's good news. Now we know how to get down to the instruction level with LLVM. Now while I want to end the blog here(brain.exe isn't working), there is one last thing I want to do.
+
+## Spliting Blocks for fun 
+
+So far we have only printed values instead of actually modifying stuff. This time we are gonna do that. The idea is simple: you take a basic block and split it into two basic blocks.
+
+(We will just write the `run()` function for this.)
+
+First, here's the logic: If a basic block has more than 4 instructions, we split it into two blocks - connecting them with an unconditional jump. 
+
+For that, we need to maintain a list of all the blocks which have more than 4 instructions. We can use a helper function to do the calculations for us:
+
+```c++
+static unsigned countSplittableInstructions(BasicBlock &BB) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        // Skip PHI nodes (must stay at block start) and the terminator
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        Count++;
+    }
+    return Count;
+}
+```
+
+We iterate over the instructions in the Basic block and first check if it is a PHI Node as it must stay at the block start. For this check we use the `isa` function template. It answers: "is this object actually a T at runtime?". 
+
+Usually in C++ we use a `dynamic_cast` which returns `nullptr` if a value is NOT of the provided type. But it is slow and LLVM provided `isa` to make things faster. LLVM avoids standard C++ RTTI for performance. Instead, every Value subclass stores a numeric ValueID set at construction. isa<T> calls T::classof(), which just compares that integer:
+
+```c++
+// Simplified version of what LLVM generates internally
+static bool classof(const Value *V) {
+    return V->getValueID() == Value::BranchInstVal;
+}
+```
+
+No vtable lookup, no string comparison — just an integer range check. Now back to the original code. 
+
+We also check if the instruction is a Terminator (since there is no class for Terminators, we cannot call `isa` on it). Finally, we return the number of instructions. Simple enough. 
+
+Next up, we call the function from `run()` and pass all basic blocks through this function and store all the blocks with more than 4 instructions in a vector:
+
+```c++
+std::vector<BasicBlock *> BlocksToSplit;
+
+for (BasicBlock &BB : F) {
+    unsigned NumInstr = countSplittableInstructions(BB);
+    if (NumInstr > 4) {
+        BlocksToSplit.push_back(&BB);
+    }
+}
+```
+
+Once we have a list of target blocks, we iterate over it to split it down the middle. 
+
+```c++
+bool Changed = false;
+for (BasicBlock *BB : BlocksToSplit) {
+    unsigned NumInstr = countSplittableInstructions(*BB);
+    unsigned SplitAt  = NumInstr / 2;  // midpoint
+
+    Instruction *SplitInstr = getInstructionAt(*BB, SplitAt);
+    if (!SplitInstr) continue;
+
+    outs() << "BlockSplitter: splitting block '" << BB->getName()
+            << "' in function '" << F.getName()
+            << "' at instruction " << SplitAt << "/" << NumInstr << "\n";
+
+    // Split the block. The new block starts at SplitInstr.
+    BasicBlock *NewBB = BB->splitBasicBlock(SplitInstr,
+                                            BB->getName() + ".split");
+    outs() << "  Created new block: " << NewBB->getName() << "\n";
+    Changed = true;
+}
+```
+
+Here is a breakdown:
+
+First we get the number of instructions using the same helper function `countSplittableInstructions`. Then we get the get the midpoint and use another helper function `getInstructionAt()` to get the instruction at that position :
+
+```c++
+static Instruction *getInstructionAt(BasicBlock &BB, unsigned Idx) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        if (Count == Idx) return &I;
+        Count++;
+    }
+    return nullptr;
+}
+```
+
+It's pretty similar to the last function - skip PHI Nodes, skip the terminator and if the index of the Instruction matches - return the pointer to the Instruction. 
+
+Returning to the `run()` function, once we have our pointer and it's not `nullptr` - we print some information, and then split it using `splitBasicBlock()`. This is a function we need to talk about. 
+
+It essentially divides a block at a specific instruction.
+
+```
+Before split:               After split at I3:
++----------+                +----------+
+| I1       |                | I1       |  (original block, now ends with br)
+| I2       |                | I2       |
+| I3       |  <-- split     +----------+
+| I4       |                    |
+| I5       |                    v
++----------+                +----------+
+                            | I3       |  (new block starts here)
+                            | I4       |
+                            | I5       |
+                            +----------+
+```
+
+One important thing to note: whenever we update the CFG - we need to update the Dominator Tree. There are a couple of ways of doing this. For our example, we would invalidate the current analysis and tell LLVM to throw away cached results and recompute from scratch next time. This is exactly what we do in this example. So far, we have been calling `PreservedAnalyses::all()` and returning it. In this case however, once we have updated the CFG, we invalidate the CFG dependent analysis:
+
+```c++
+if (!Changed)
+    return PreservedAnalyses::all();
+
+PreservedAnalyses PA;
+return PA;
+```
+
+If there were no splits, we dont need to recompute stuff and can return the usual `PreservedAnalyses::all()` or else force a recomputation. 
+
+Finally, we have one last piece: 
+
+```c++
+static bool isRequired() { return true; }
+```
+
+This tells the LLVM that: "Hey this pass is not optional and you need to run it on every pass - it is not optional". Putting it all together:
+
+```c++
+// BlockSplitter.cpp
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+
+#include <vector>
+
+using namespace llvm;
+static const unsigned SPLIT_THRESHOLD = 4;
+
+static unsigned countSplittableInstructions(BasicBlock &BB) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        Count++;
+    }
+    return Count;
+}
+
+static Instruction *getInstructionAt(BasicBlock &BB, unsigned Idx) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        if (Count == Idx) return &I;
+        Count++;
+    }
+    return nullptr;
+}
+
+struct BlockSplitterPass : public PassInfoMixin<BlockSplitterPass> {
+
+    PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM) {
+        bool Changed = false;
+
+        std::vector<BasicBlock *> BlocksToSplit;
+
+        for (BasicBlock &BB : F) {
+            unsigned NumInstr = countSplittableInstructions(BB);
+            if (NumInstr > 4) {
+                BlocksToSplit.push_back(&BB);
+            }
+        }
+
+        for (BasicBlock *BB : BlocksToSplit) {
+            unsigned NumInstr = countSplittableInstructions(*BB);
+            unsigned SplitAt  = NumInstr / 2;  // midpoint
+
+            Instruction *SplitInstr = getInstructionAt(*BB, SplitAt);
+            if (!SplitInstr) continue;
+
+            outs() << "BlockSplitter: splitting block '" << BB->getName()
+                   << "' in function '" << F.getName()
+                   << "' at instruction " << SplitAt << "/" << NumInstr << "\n";
+
+            BasicBlock *NewBB = BB->splitBasicBlock(SplitInstr, BB->getName() + ".split");
+            outs() << "  Created new block: " << NewBB->getName() << "\n";
+            Changed = true;
+        }
+
+        if (!Changed)
+            return PreservedAnalyses::all();
+        PreservedAnalyses PA;
+        return PA;
+    }
+
+    static bool isRequired() { return true; }
+};
+
+llvm::PassPluginLibraryInfo getBlockSplitterPluginInfo() {
+    return {
+        LLVM_PLUGIN_API_VERSION,
+        "BlockSplitter",
+        LLVM_VERSION_STRING,
+        [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, FunctionPassManager &FPM,
+                   ArrayRef<PassBuilder::PipelineElement>) -> bool {
+                    if (Name == "block-splitter") {
+                        FPM.addPass(BlockSplitterPass());
+                        return true;
+                    }
+                    return false;
+                });
+        }
+    };
+}
+
+extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+llvmGetPassPluginInfo() {
+    return getBlockSplitterPluginInfo();
+}
+```
+
+And our `CMakeLists.txt`:
+
+```
+cmake_minimum_required(VERSION 3.20)
+project(BlockSplitter LANGUAGES C CXX)
+
+find_package(LLVM REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+include(AddLLVM)
+
+add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-fno-rtti)
+
+add_library(BlockSplitter MODULE BlockSplitter.cpp)
+```
+
+Building it with:
+
+```
+cmake -DLLVM_DIR=$(llvm-config --cmakedir) . && cmake --build .
+```
+
+Using the same `classify.ll` from the last example:
+
+```
+opt-17 -load-pass-plugin ./libBlockSplitter.so -passes='block-splitter' -S classify.ll -o splits.ll
+```
+
+This should give us the following output:
+
+```
+BlockSplitter: splitting block '' in function 'classify' at instruction 2/5
+  Created new block: .split
+BlockSplitter: splitting block '' in function 'oddoreven' at instruction 3/6
+  Created new block: .split
+```
+
+And create the `splits.ll` file. In the original `classify.ll` file, we have the following IR:
+
+```
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @classify(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %4 = load i32, ptr %2, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %1
+  store i32 1, ptr %3, align 4
+  br label %8
+
+7:                                                ; preds = %1
+  store i32 -1, ptr %3, align 4
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i32, ptr %3, align 4
+  ret i32 %9
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @oddoreven(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %3 = load i32, ptr %2, align 4
+  %4 = srem i32 %3, 2
+  %5 = icmp eq i32 %4, 0
+  %6 = zext i1 %5 to i32
+  ret i32 %6
+}
+```
+
+And in our `splits.ll` file we have:
+
+```
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @classify(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  br label %.split
+
+.split:                                           ; preds = %1
+  store i32 %0, ptr %2, align 4
+  %4 = load i32, ptr %2, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %.split
+  store i32 1, ptr %3, align 4
+  br label %8
+
+7:                                                ; preds = %.split
+  store i32 -1, ptr %3, align 4
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i32, ptr %3, align 4
+  ret i32 %9
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @oddoreven(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %3 = load i32, ptr %2, align 4
+  br label %.split
+
+.split:                                           ; preds = %1
+  %4 = srem i32 %3, 2
+  %5 = icmp eq i32 %4, 0
+  %6 = zext i1 %5 to i32
+  ret i32 %6
+}
+```
+
+Notice how we have a new `.split` code block and an unconditional jump to it? This means our pass works!
+
+![](https://media.tenor.com/CarV7GDhiwQAAAAM/yippee-cat.gif)
+
+With this, we are one step closer to writing our code flattener! See you in part 3 (whenever I get around to writing that)!
