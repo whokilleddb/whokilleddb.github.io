@@ -291,6 +291,14 @@ As a rule, if a basic block has a `phi` instruction - it must be the first instr
 
 A Basic Block A is said to _dominate_ Basic Block B if every possible path from the function start to Block B passes through Block A - aka if a control flow is at BLOCK B, it MUST HAVE PASSED THROUGH BLOCK A. It goes without saying that the entry block dominates all other blocks in the function's CFG. 
 
+A Dominator Tree is just a data structure that represents dominance relationships in a function's Control Flow Graph (CFG) - aka who-dominates-who. From [
+2017 LLVM Developers’ Meeting: J. Kuderski “Dominator Trees and incremental updates that ... ”](https://www.youtube.com/watch?v=bNV18Wy-J0U):
+
+> Tree T is the dominator tree if and only if it has the parent and the sibling properties. In a dominator tree, if a block A immediately dominates block B, then A is the parent of B.
+
+I would highly recommend going through the talk (its just 35 minutes!) or atleast the first 5 minutes.
+
+
 -------------------
 
 # LLVM C+ API for CFG Traversal 
@@ -500,3 +508,360 @@ So everything works out just as we wanted! That's good news. Now we know how to 
 
 ## Spliting Blocks for fun 
 
+So far we have only printed values instead of actually modifying stuff. This time we are gonna do that. The idea is simple: you take a basic block and split it into two basic blocks.
+
+(We will just write the `run()` function for this.)
+
+First, here's the logic: If a basic block has more than 4 instructions, we split it into two blocks - connecting them with an unconditional jump. 
+
+For that, we need to maintain a list of all the blocks which have more than 4 instructions. We can use a helper function to do the calculations for us:
+
+```c++
+static unsigned countSplittableInstructions(BasicBlock &BB) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        // Skip PHI nodes (must stay at block start) and the terminator
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        Count++;
+    }
+    return Count;
+}
+```
+
+We iterate over the instructions in the Basic block and first check if it is a PHI Node as it must stay at the block start. For this check we use the `isa` function template. It answers: "is this object actually a T at runtime?". 
+
+Usually in C++ we use a `dynamic_cast` which returns `nullptr` if a value is NOT of the provided type. But it is slow and LLVM provided `isa` to make things faster. LLVM avoids standard C++ RTTI for performance. Instead, every Value subclass stores a numeric ValueID set at construction. isa<T> calls T::classof(), which just compares that integer:
+
+```c++
+// Simplified version of what LLVM generates internally
+static bool classof(const Value *V) {
+    return V->getValueID() == Value::BranchInstVal;
+}
+```
+
+No vtable lookup, no string comparison — just an integer range check. Now back to the original code. 
+
+We also check if the instruction is a Terminator (since there is no class for Terminators, we cannot call `isa` on it). Finally, we return the number of instructions. Simple enough. 
+
+Next up, we call the function from `run()` and pass all basic blocks through this function and store all the blocks with more than 4 instructions in a vector:
+
+```c++
+std::vector<BasicBlock *> BlocksToSplit;
+
+for (BasicBlock &BB : F) {
+    unsigned NumInstr = countSplittableInstructions(BB);
+    if (NumInstr > 4) {
+        BlocksToSplit.push_back(&BB);
+    }
+}
+```
+
+Once we have a list of target blocks, we iterate over it to split it down the middle. 
+
+```c++
+bool Changed = false;
+for (BasicBlock *BB : BlocksToSplit) {
+    unsigned NumInstr = countSplittableInstructions(*BB);
+    unsigned SplitAt  = NumInstr / 2;  // midpoint
+
+    Instruction *SplitInstr = getInstructionAt(*BB, SplitAt);
+    if (!SplitInstr) continue;
+
+    outs() << "BlockSplitter: splitting block '" << BB->getName()
+            << "' in function '" << F.getName()
+            << "' at instruction " << SplitAt << "/" << NumInstr << "\n";
+
+    // Split the block. The new block starts at SplitInstr.
+    BasicBlock *NewBB = BB->splitBasicBlock(SplitInstr,
+                                            BB->getName() + ".split");
+    outs() << "  Created new block: " << NewBB->getName() << "\n";
+    Changed = true;
+}
+```
+
+Here is a breakdown:
+
+First we get the number of instructions using the same helper function `countSplittableInstructions`. Then we get the get the midpoint and use another helper function `getInstructionAt()` to get the instruction at that position :
+
+```c++
+static Instruction *getInstructionAt(BasicBlock &BB, unsigned Idx) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        if (Count == Idx) return &I;
+        Count++;
+    }
+    return nullptr;
+}
+```
+
+It's pretty similar to the last function - skip PHI Nodes, skip the terminator and if the index of the Instruction matches - return the pointer to the Instruction. 
+
+Returning to the `run()` function, once we have our pointer and it's not `nullptr` - we print some information, and then split it using `splitBasicBlock()`. This is a function we need to talk about. 
+
+It essentially divides a block at a specific instruction.
+
+```
+Before split:               After split at I3:
++----------+                +----------+
+| I1       |                | I1       |  (original block, now ends with br)
+| I2       |                | I2       |
+| I3       |  <-- split     +----------+
+| I4       |                    |
+| I5       |                    v
++----------+                +----------+
+                            | I3       |  (new block starts here)
+                            | I4       |
+                            | I5       |
+                            +----------+
+```
+
+One important thing to note: whenever we update the CFG - we need to update the Dominator Tree. There are a couple of ways of doing this. For our example, we would invalidate the current analysis and tell LLVM to throw away cached results and recompute from scratch next time. This is exactly what we do in this example. So far, we have been calling `PreservedAnalyses::all()` and returning it. In this case however, once we have updated the CFG, we invalidate the CFG dependent analysis:
+
+```c++
+if (!Changed)
+    return PreservedAnalyses::all();
+
+PreservedAnalyses PA;
+return PA;
+```
+
+If there were no splits, we dont need to recompute stuff and can return the usual `PreservedAnalyses::all()` or else force a recomputation. 
+
+Finally, we have one last piece: 
+
+```c++
+static bool isRequired() { return true; }
+```
+
+This tells the LLVM that: "Hey this pass is not optional and you need to run it on every pass - it is not optional". Putting it all together:
+
+```c++
+// BlockSplitter.cpp
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+
+#include <vector>
+
+using namespace llvm;
+static const unsigned SPLIT_THRESHOLD = 4;
+
+static unsigned countSplittableInstructions(BasicBlock &BB) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        Count++;
+    }
+    return Count;
+}
+
+static Instruction *getInstructionAt(BasicBlock &BB, unsigned Idx) {
+    unsigned Count = 0;
+    for (Instruction &I : BB) {
+        if (isa<PHINode>(&I)) continue;
+        if (I.isTerminator())   continue;
+        if (Count == Idx) return &I;
+        Count++;
+    }
+    return nullptr;
+}
+
+struct BlockSplitterPass : public PassInfoMixin<BlockSplitterPass> {
+
+    PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM) {
+        bool Changed = false;
+
+        std::vector<BasicBlock *> BlocksToSplit;
+
+        for (BasicBlock &BB : F) {
+            unsigned NumInstr = countSplittableInstructions(BB);
+            if (NumInstr > 4) {
+                BlocksToSplit.push_back(&BB);
+            }
+        }
+
+        for (BasicBlock *BB : BlocksToSplit) {
+            unsigned NumInstr = countSplittableInstructions(*BB);
+            unsigned SplitAt  = NumInstr / 2;  // midpoint
+
+            Instruction *SplitInstr = getInstructionAt(*BB, SplitAt);
+            if (!SplitInstr) continue;
+
+            outs() << "BlockSplitter: splitting block '" << BB->getName()
+                   << "' in function '" << F.getName()
+                   << "' at instruction " << SplitAt << "/" << NumInstr << "\n";
+
+            BasicBlock *NewBB = BB->splitBasicBlock(SplitInstr, BB->getName() + ".split");
+            outs() << "  Created new block: " << NewBB->getName() << "\n";
+            Changed = true;
+        }
+
+        if (!Changed)
+            return PreservedAnalyses::all();
+        PreservedAnalyses PA;
+        return PA;
+    }
+
+    static bool isRequired() { return true; }
+};
+
+llvm::PassPluginLibraryInfo getBlockSplitterPluginInfo() {
+    return {
+        LLVM_PLUGIN_API_VERSION,
+        "BlockSplitter",
+        LLVM_VERSION_STRING,
+        [](PassBuilder &PB) {
+            PB.registerPipelineParsingCallback(
+                [](StringRef Name, FunctionPassManager &FPM,
+                   ArrayRef<PassBuilder::PipelineElement>) -> bool {
+                    if (Name == "block-splitter") {
+                        FPM.addPass(BlockSplitterPass());
+                        return true;
+                    }
+                    return false;
+                });
+        }
+    };
+}
+
+extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+llvmGetPassPluginInfo() {
+    return getBlockSplitterPluginInfo();
+}
+```
+
+And our `CMakeLists.txt`:
+
+```
+cmake_minimum_required(VERSION 3.20)
+project(BlockSplitter LANGUAGES C CXX)
+
+find_package(LLVM REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+include(AddLLVM)
+
+add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-fno-rtti)
+
+add_library(BlockSplitter MODULE BlockSplitter.cpp)
+```
+
+Building it with:
+
+```
+cmake -DLLVM_DIR=$(llvm-config --cmakedir) . && cmake --build .
+```
+
+Using the same `classify.ll` from the last example:
+
+```
+opt-17 -load-pass-plugin ./libBlockSplitter.so -passes='block-splitter' -S classify.ll -o splits.ll
+```
+
+This should give us the following output:
+
+```
+BlockSplitter: splitting block '' in function 'classify' at instruction 2/5
+  Created new block: .split
+BlockSplitter: splitting block '' in function 'oddoreven' at instruction 3/6
+  Created new block: .split
+```
+
+And create the `splits.ll` file. In the original `classify.ll` file, we have the following IR:
+
+```
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @classify(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %4 = load i32, ptr %2, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %1
+  store i32 1, ptr %3, align 4
+  br label %8
+
+7:                                                ; preds = %1
+  store i32 -1, ptr %3, align 4
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i32, ptr %3, align 4
+  ret i32 %9
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @oddoreven(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %3 = load i32, ptr %2, align 4
+  %4 = srem i32 %3, 2
+  %5 = icmp eq i32 %4, 0
+  %6 = zext i1 %5 to i32
+  ret i32 %6
+}
+```
+
+And in our `splits.ll` file we have:
+
+```
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @classify(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  %3 = alloca i32, align 4
+  br label %.split
+
+.split:                                           ; preds = %1
+  store i32 %0, ptr %2, align 4
+  %4 = load i32, ptr %2, align 4
+  %5 = icmp sgt i32 %4, 0
+  br i1 %5, label %6, label %7
+
+6:                                                ; preds = %.split
+  store i32 1, ptr %3, align 4
+  br label %8
+
+7:                                                ; preds = %.split
+  store i32 -1, ptr %3, align 4
+  br label %8
+
+8:                                                ; preds = %7, %6
+  %9 = load i32, ptr %3, align 4
+  ret i32 %9
+}
+
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @oddoreven(i32 noundef %0) #0 {
+  %2 = alloca i32, align 4
+  store i32 %0, ptr %2, align 4
+  %3 = load i32, ptr %2, align 4
+  br label %.split
+
+.split:                                           ; preds = %1
+  %4 = srem i32 %3, 2
+  %5 = icmp eq i32 %4, 0
+  %6 = zext i1 %5 to i32
+  ret i32 %6
+}
+```
+
+Notice how we have a new `.split` code block and an unconditional jump to it? This means our pass works!
+
+![](https://media.tenor.com/CarV7GDhiwQAAAAM/yippee-cat.gif)
+
+With this, we are one step closer to writing our code flattener! See you in part 3 (whenever I get around to writing that)!

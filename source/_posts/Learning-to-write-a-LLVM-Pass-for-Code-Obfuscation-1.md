@@ -400,6 +400,8 @@ Which is pretty simple - we just print the function names. Now go follow the res
 
 Hi! You are back! So at this point you should have a basic idea of how the thing works and written your first pass. But this doesn't do anything useful. Also, in the example, we see they are using IR code - not something super useful. Ideally, we would want a clang flag or some other way to pass our C/C++ code directly. So I am planning to in the long run (as in by the end of this series) to implement something of that sort. Let's see how it goes! Wish me luck and see you soon!
 
+> [Part 2](https://whokilleddb.github.io/2026/06/26/Learning-to-write-a-LLVM-Pass-for-Code-Obfuscation-2/) is out!
+
 ## References
 
 1. [Official Guide on how to write a LLVM pass](https://llvm.org/docs/WritingAnLLVMNewPMPass.html)
