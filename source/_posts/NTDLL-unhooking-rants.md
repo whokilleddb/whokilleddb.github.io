@@ -143,7 +143,7 @@ Interceptor.attach(pNtAllocateVirtualMemory, {
     onEnter: function (args) {
         send("[+] Called NtAllocateVirtualMemory [+]");
     }
-});``
+});
 ```
 
 Pre-hooking the address looks like this:
