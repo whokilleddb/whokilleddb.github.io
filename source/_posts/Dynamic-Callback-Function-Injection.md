@@ -23,6 +23,8 @@ Internally these all populate the process-global list `ntdll!RtlpDynamicFunction
 
 <img src="/images/dyn_func_inject/RtlpDynamicFunctionTable.png" style="display:block; margin:0;" />
 
+<br />
+
 ## The `DYNAMIC_FUNCTION_TABLE` Structure
 
 [Microsoft defines](https://learn.microsoft.com/pl-pl/windows/win32/devnotes/dynamic_function_table_type) `DYNAMIC_FUNCTION_TABLE` as:
@@ -57,7 +59,6 @@ typedef PRUNTIME_FUNCTION (CALLBACK *PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD_PTR,P
 
 If this callback function returns `NULL` it means _"no unwind info here"_ - the callback still ran, which is the whole point.
 
-
 ## The Registration API
 
 ```c
@@ -70,24 +71,30 @@ BOOLEAN RtlInstallFunctionTableCallback(
     PCWSTR   OutOfProcessCallbackDll  // optional
 );
 ```
+That `Callback` pointer is stored as a raw function pointer in the caller's own heap-tracked list inside ntdll. It is not CFG-guarded on the way in, and it lives at a data address (not in a code section).
 
-The signature of the callback is:
+<div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+  <img src="/images/dyn_func_inject/suscat.png" style="flex:0 1 auto; max-width:90%; height:auto; margin:10; border-radius:0;" />
+  <p style="flex:1 1 250px; margin:0;">SUS!</p>
+</div>
+<br />
 
-PRUNTIME_FUNCTION Callback(DWORD64 ControlPc, PVOID Context);
 
-That Callback pointer is stored as a raw function pointer in the caller's own heap-tracked list inside ntdll. It is not CFG-guarded on the way in, and it lives at a data address (not in a code section).
+_Sidenote: At this point of writing this blog, my friends forced me to buy Skyrim and Cyberpunk. Is it bad that I haven't played any of these? Anyways, moving on._
 
-The Invocation Path — Where the Callback Fires
+## The Invocation Path - Where the Callback Fires
 
-The interesting question for injection research is: "what makes ntdll actually call that function pointer?"
+The interesting question for injection research is: _"what makes ntdll actually call that function pointer?"_
 
 The chain is:
 
+```
 RtlLookupFunctionEntry(ControlPc, &ImageBase, &HistoryTable)
   └─> RtlpLookupDynamicFunctionEntry
-        └─> walks RtlpDynamicFunctionTable list
+        └─> x list
               └─> if node.Type == RF_CALLBACK
                     └─> INVOKES node.Callback(ControlPc, node.Context)
+```
 
 RtlLookupFunctionEntry is called any time the OS needs to unwind:
 
