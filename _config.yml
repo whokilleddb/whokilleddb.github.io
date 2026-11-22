@@ -90,6 +90,13 @@ excerpt:
   depth: 10
   hideWholePostExcerpts: true
 
+# Mermaid
+mermaid:
+  enable: true
+  version: "11.4.0"
+  options:
+    theme: 'dark'
+
 # Deployment
 deploy:
   type: ''

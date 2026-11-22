@@ -19,6 +19,13 @@
 </script>
 <% } %>
 
+<% if (config.mermaid && config.mermaid.enable) { %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/<%= config.mermaid.version %>/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: '<%= config.mermaid.options && config.mermaid.options.theme || "dark" %>' });
+</script>
+<% } %>
+
 <% if (config.search) { %>
    <script type="text/javascript">      
      var search_path = "<%= config.search.path %>";
