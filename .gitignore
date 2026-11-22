@@ -9,3 +9,4 @@ public/
 .cache/
 _multiconfig.yml
 .DS_Store
+*.obj
